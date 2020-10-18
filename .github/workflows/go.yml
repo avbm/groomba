@@ -30,9 +30,15 @@ jobs:
             dep ensure
         fi
 
+    - name: Test
+      run: go test -v .
+
     - name: Build
       run: go build -v .
 
-    - name: Test
-      run: go test -v .
+    - name: Bump version and push tag
+      uses: anothrNick/github-tag-action@1.26.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG_CONTEXT: branch
 
