@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	STALE_AGE_THRESHOLD = 3
+	STALE_AGE_THRESHOLD = 10
 )
 
 var STATIC_BRANCHES = []string{"production", "staging", "canary", "govcloud", "release", "master", "gcp_staging", "gcp_beta", "gcp_production"}
@@ -96,21 +96,33 @@ func printBranchesGroupbyAuthor(repo *git.Repository, branches []*plumbing.Refer
 }
 
 func moveBranch(repo *git.Repository, ref *plumbing.Reference) error {
-	remote, err := repo.Remote("origin")
+	refName := ref.Name().String()
+	parts := strings.Split(refName, "/")
+	branch := parts[len(parts)-1]
+	parts = append(append(parts[:len(parts)-1], "stale"), branch)
+	newRefName := strings.Join(parts, "/")
+	fmt.Printf("Copy %s to %s\n", refName, newRefName)
+	renameSpec := config.RefSpec(fmt.Sprintf("%s:%s", refName, newRefName))
+	err := repo.Push(&git.PushOptions{
+		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{renameSpec},
+	})
+
 	if err != nil {
 		return err
 	}
-	refName := ref.Name().String()
-	renameSpec := config.RefSpec(fmt.Sprintf("%s:stale/%s", refName, refName))
-	remote.Push(&git.PushOptions{RefSpecs: []config.RefSpec{renameSpec}})
-
+	fmt.Printf("Delete %s\n", refName)
 	deleteSpec := config.RefSpec(fmt.Sprintf(":%s", refName))
-	remote.Push(&git.PushOptions{RefSpecs: []config.RefSpec{deleteSpec}})
-	return nil
+	err = repo.Push(&git.PushOptions{
+		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{deleteSpec},
+	})
+	return err
 }
 
 func moveStaleBranches(repo *git.Repository, branches []*plumbing.Reference) error {
 	for _, ref := range branches {
+		fmt.Printf("INFO: moving branch %s\n", ref.Name().Short())
 		err := moveBranch(repo, ref)
 		if err != nil {
 			return err
@@ -128,6 +140,9 @@ func main() {
 	})
 	fb := filterBranches(repo, STALE_AGE_THRESHOLD)
 	printBranchesGroupbyAuthor(repo, fb)
-	fb = fb[:10]
-	moveStaleBranches(repo, fb)
+	if len(fb) > 10 {
+		fb = fb[:10]
+	}
+	// err := moveStaleBranches(repo, fb)
+	// CheckIfError(err)
 }

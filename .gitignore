@@ -1,3 +1,7 @@
 .vscode/*
 __*
 groomba
+testdata/src
+testdata/src/*
+testdata/dst
+testdata/dst/*
