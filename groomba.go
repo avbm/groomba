@@ -44,8 +44,6 @@ func filterBranches(repo *git.Repository, threshold int, referenceDate time.Time
 
 	filteredBranches := []*plumbing.Reference{}
 	branchList.ForEach(func(ref *plumbing.Reference) error {
-		// fmt.Println(ref)
-		// fmt.Println(ref.Name().String())
 		if ref.Type() == plumbing.HashReference && ref.Name().IsRemote() &&
 			!isStaticBranch(ref.Name().String()) &&
 			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/revert") &&
@@ -61,7 +59,6 @@ func filterBranches(repo *git.Repository, threshold int, referenceDate time.Time
 				filteredBranches = append(filteredBranches, ref)
 			}
 		}
-		// fmt.Println(ref.Name().String(), commit.Author.Name, commit.Author.When)
 		return nil
 	})
 	return filteredBranches
@@ -137,9 +134,6 @@ func main() {
 	})
 	fb := filterBranches(repo, STALE_AGE_THRESHOLD, time.Now())
 	printBranchesGroupbyAuthor(repo, fb)
-	if len(fb) > 10 {
-		fb = fb[:10]
-	}
 	err := moveStaleBranches(repo, fb)
 	CheckIfError(err)
 }
