@@ -140,6 +140,6 @@ func main() {
 	if len(fb) > 10 {
 		fb = fb[:10]
 	}
-	// err := moveStaleBranches(repo, fb)
-	// CheckIfError(err)
+	err := moveStaleBranches(repo, fb)
+	CheckIfError(err)
 }
