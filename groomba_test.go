@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -13,8 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func CheckTestInitError(err error) {
-	CheckIfError(err, "Failed to initialize tests")
+func CheckTestInitError(err error, msg ...string) {
+	msg = append([]string{"Failed to initialize test"}, msg...)
+	CheckIfError(err, msg...)
 }
 
 func TestInit(t *testing.T) {
@@ -27,6 +27,8 @@ func TestInit(t *testing.T) {
 	os.Chdir("testdata/src")
 	gitCommands := []string{
 		"init",
+		"config user.email 'test@user.com'",
+		"config user.name 'Test User'",
 		"commit --allow-empty -am Initial_commit --date 2020-01-01",
 		"checkout -b IsStale",
 		"commit --allow-empty -am Stale_commit --date 2020-01-02",
@@ -34,9 +36,8 @@ func TestInit(t *testing.T) {
 		"commit --allow-empty -am Fresh_commit --date 2020-01-15",
 	}
 	for _, cmd := range gitCommands {
-		fmt.Println("git", cmd)
 		err := exec.Command("git", strings.Split(cmd, " ")...).Run()
-		CheckTestInitError(err)
+		CheckTestInitError(err, "git", cmd)
 	}
 	os.Chdir("../..")
 
