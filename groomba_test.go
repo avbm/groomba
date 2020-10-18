@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -33,6 +34,7 @@ func TestInit(t *testing.T) {
 		"commit --allow-empty -am Fresh_commit --date 2020-01-15",
 	}
 	for _, cmd := range gitCommands {
+		fmt.Println("git", cmd)
 		err := exec.Command("git", strings.Split(cmd, " ")...).Run()
 		CheckTestInitError(err)
 	}
