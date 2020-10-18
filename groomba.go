@@ -17,7 +17,7 @@ const (
 	STALE_AGE_THRESHOLD = 10
 )
 
-var STATIC_BRANCHES = []string{"production", "staging", "canary", "govcloud", "release", "master", "gcp_staging", "gcp_beta", "gcp_production"}
+var STATIC_BRANCHES = []string{"main", "mainline", "production", "staging", "canary", "govcloud", "release", "master", "gcp_staging", "gcp_beta", "gcp_production"}
 
 // CheckIfError should be used to naively panics if an error is not nil.
 func CheckIfError(err error, prefix ...string) {
@@ -31,14 +31,14 @@ func CheckIfError(err error, prefix ...string) {
 
 func isStaticBranch(name string) bool {
 	for _, b := range STATIC_BRANCHES {
-		if b == name {
+		if fmt.Sprintf("refs/remotes/origin/%s", b) == name {
 			return true
 		}
 	}
 	return false
 }
 
-func filterBranches(repo *git.Repository, threshold int) []*plumbing.Reference {
+func filterBranches(repo *git.Repository, threshold int, referenceDate time.Time) []*plumbing.Reference {
 	branchList, err := repo.References() //Branches()
 	CheckIfError(err)
 
@@ -57,7 +57,7 @@ func filterBranches(repo *git.Repository, threshold int) []*plumbing.Reference {
 
 			t, err := time.ParseDuration(fmt.Sprintf("%dh", threshold*24))
 			CheckIfError(err)
-			if time.Since(commit.Author.When) > t {
+			if referenceDate.Sub(commit.Author.When) > t {
 				filteredBranches = append(filteredBranches, ref)
 			}
 		}
@@ -96,13 +96,10 @@ func printBranchesGroupbyAuthor(repo *git.Repository, branches []*plumbing.Refer
 }
 
 func moveBranch(repo *git.Repository, ref *plumbing.Reference) error {
-	refName := ref.Name().String()
-	parts := strings.Split(refName, "/")
-	branch := parts[len(parts)-1]
-	parts = append(append(parts[:len(parts)-1], "stale"), branch)
-	newRefName := strings.Join(parts, "/")
-	fmt.Printf("Copy %s to %s\n", refName, newRefName)
-	renameSpec := config.RefSpec(fmt.Sprintf("%s:%s", refName, newRefName))
+	refName := ref.Name().Short()[7:]
+	newRefName := "stale/" + refName
+	fmt.Printf("INFO: Copy %s to %s\n", refName, newRefName)
+	renameSpec := config.RefSpec(fmt.Sprintf("refs/remotes/origin/%s:refs/heads/%s", refName, newRefName))
 	err := repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{renameSpec},
@@ -111,8 +108,8 @@ func moveBranch(repo *git.Repository, ref *plumbing.Reference) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Delete %s\n", refName)
-	deleteSpec := config.RefSpec(fmt.Sprintf(":%s", refName))
+	fmt.Printf("INFO: Delete %s\n", refName)
+	deleteSpec := config.RefSpec(fmt.Sprintf(":refs/heads/%s", refName))
 	err = repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{deleteSpec},
@@ -138,7 +135,7 @@ func main() {
 		RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
 		Depth:      1,
 	})
-	fb := filterBranches(repo, STALE_AGE_THRESHOLD)
+	fb := filterBranches(repo, STALE_AGE_THRESHOLD, time.Now())
 	printBranchesGroupbyAuthor(repo, fb)
 	if len(fb) > 10 {
 		fb = fb[:10]
