@@ -1,0 +1,5 @@
+---
+StaleAgeThreshold: 10
+StaticBranches: ["main", "teststatic"]
+#stale_age_threshold: 10
+#static_branches: ["main", "teststatic"]
