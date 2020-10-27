@@ -59,7 +59,7 @@ func TestGroomba(t *testing.T) {
 
 	repo, _ := git.PlainOpen("testdata/dst")
 	today, _ := time.Parse(time.RFC3339, "2020-01-20T00:00:00Z")
-	fb := g.filterBranches(repo, today)
+	fb, _ := g.filterBranches(repo, today)
 	t.Run("stale branch should be detected", func(t *testing.T) {
 		a := assert.New(t)
 

@@ -37,9 +37,11 @@ func (g Groomba) isStaticBranch(name string) bool {
 	return false
 }
 
-func (g Groomba) filterBranches(repo *git.Repository, referenceDate time.Time) []*plumbing.Reference {
+func (g Groomba) filterBranches(repo *git.Repository, referenceDate time.Time) ([]*plumbing.Reference, error) {
 	branchList, err := repo.References() //Branches()
-	CheckIfError(err)
+	if err != nil {
+		return nil, err
+	}
 
 	filteredBranches := []*plumbing.Reference{}
 	branchList.ForEach(func(ref *plumbing.Reference) error {
@@ -50,20 +52,24 @@ func (g Groomba) filterBranches(repo *git.Repository, referenceDate time.Time) [
 			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/stale") {
 
 			commit, err := repo.CommitObject(ref.Hash())
-			CheckIfError(err)
+			if err != nil {
+				fmt.Printf("WARN: failed to read reference: %s, err: %s\n", ref, err)
+			}
 
 			t, err := time.ParseDuration(fmt.Sprintf("%dh", g.cfg.StaleAgeThreshold*24))
-			CheckIfError(err)
+			if err != nil {
+				fmt.Printf("WARN: failed to calculate age for ref: %s, err: %s\n", ref, err)
+			}
 			if referenceDate.Sub(commit.Author.When) > t {
 				filteredBranches = append(filteredBranches, ref)
 			}
 		}
 		return nil
 	})
-	return filteredBranches
+	return filteredBranches, nil
 }
 
-func (g Groomba) printBranchesGroupbyAuthor(repo *git.Repository, branches []*plumbing.Reference) {
+func (g Groomba) printBranchesGroupbyAuthor(repo *git.Repository, branches []*plumbing.Reference) error {
 	type Branch struct {
 		Name string
 		Age  string
@@ -71,7 +77,9 @@ func (g Groomba) printBranchesGroupbyAuthor(repo *git.Repository, branches []*pl
 	authors := make(map[string][]*Branch)
 	for _, ref := range branches {
 		commit, err := repo.CommitObject(ref.Hash())
-		CheckIfError(err)
+		if err != nil {
+			return err
+		}
 
 		b := &Branch{
 			Name: ref.Name().String(),
@@ -86,9 +94,12 @@ func (g Groomba) printBranchesGroupbyAuthor(repo *git.Repository, branches []*pl
 	}
 
 	a, err := yaml.Marshal(authors)
-	CheckIfError(err)
+	if err != nil {
+		return err
+	}
 
 	fmt.Println(string(a))
+	return nil
 }
 
 func (g Groomba) moveBranch(repo *git.Repository, ref *plumbing.Reference) error {
@@ -135,8 +146,12 @@ func main() {
 		RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
 		Depth:      1,
 	})
-	fb := g.filterBranches(repo, time.Now())
-	g.printBranchesGroupbyAuthor(repo, fb)
+	fb, err := g.filterBranches(repo, time.Now())
+	CheckIfError(err)
+
+	err = g.printBranchesGroupbyAuthor(repo, fb)
+	CheckIfError(err)
+
 	err = g.moveStaleBranches(repo, fb)
 	CheckIfError(err)
 }
