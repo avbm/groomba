@@ -51,7 +51,7 @@ func TestGroomba(t *testing.T) {
 
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
-	g := Groomba{Cfg: cfg, Repo: repo}
+	g := Groomba{cfg: cfg, repo: repo}
 	t.Run("main branch should be static", func(t *testing.T) {
 		a := assert.New(t)
 		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/main"))

@@ -13,13 +13,15 @@ func main() {
 	cfg, err := groomba.GetConfig(".")
 	groomba.CheckIfError(err)
 
-	g := groomba.Groomba{Cfg: cfg}
 	repo, _ := git.PlainOpen(".")
 	repo.Fetch(&git.FetchOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
 		Depth:      1,
 	})
+
+	g := groomba.NewGroomba(cfg, repo)
+
 	fb, err := g.FilterBranches(time.Now())
 	groomba.CheckIfError(err)
 

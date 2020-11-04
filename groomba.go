@@ -15,8 +15,8 @@ import (
 
 // Groomba base type to store config and other shared references
 type Groomba struct {
-	Cfg  *Config
-	Repo *git.Repository
+	cfg  *Config
+	repo *git.Repository
 }
 
 // CheckIfError should be used to naively panic if an error is not nil.
@@ -29,8 +29,15 @@ func CheckIfError(err error, prefix ...string) {
 	os.Exit(1)
 }
 
+func NewGroomba(config *Config, repo *git.Repository) Groomba {
+	return Groomba{
+		cfg:  config,
+		repo: repo,
+	}
+}
+
 func (g Groomba) IsStaticBranch(name string) bool {
-	for _, b := range g.Cfg.StaticBranches {
+	for _, b := range g.cfg.StaticBranches {
 		if fmt.Sprintf("refs/remotes/origin/%s", b) == name {
 			return true
 		}
@@ -39,7 +46,7 @@ func (g Groomba) IsStaticBranch(name string) bool {
 }
 
 func (g Groomba) FilterBranches(referenceDate time.Time) ([]*plumbing.Reference, error) {
-	branchList, err := g.Repo.References() //Branches()
+	branchList, err := g.repo.References() //Branches()
 	if err != nil {
 		return nil, err
 	}
@@ -52,12 +59,12 @@ func (g Groomba) FilterBranches(referenceDate time.Time) ([]*plumbing.Reference,
 			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/cherry-pick") &&
 			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/stale") {
 
-			commit, err := g.Repo.CommitObject(ref.Hash())
+			commit, err := g.repo.CommitObject(ref.Hash())
 			if err != nil {
 				fmt.Printf("WARN: failed to read reference: %s, err: %s\n", ref, err)
 			}
 
-			t, err := time.ParseDuration(fmt.Sprintf("%dh", g.Cfg.StaleAgeThreshold*24))
+			t, err := time.ParseDuration(fmt.Sprintf("%dh", g.cfg.StaleAgeThreshold*24))
 			if err != nil {
 				fmt.Printf("WARN: failed to calculate age for ref: %s, err: %s\n", ref, err)
 			}
@@ -77,7 +84,7 @@ func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) erro
 	}
 	authors := make(map[string][]*Branch)
 	for _, ref := range branches {
-		commit, err := g.Repo.CommitObject(ref.Hash())
+		commit, err := g.repo.CommitObject(ref.Hash())
 		if err != nil {
 			return err
 		}
@@ -107,7 +114,7 @@ func (g Groomba) MoveBranch(refName string) error {
 	newRefName := "stale/" + refName
 	fmt.Printf("INFO:   copy %s to %s\n", refName, newRefName)
 	renameSpec := config.RefSpec(fmt.Sprintf("refs/remotes/origin/%s:refs/heads/%s", refName, newRefName))
-	err := g.Repo.Push(&git.PushOptions{
+	err := g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{renameSpec},
 	})
@@ -117,7 +124,7 @@ func (g Groomba) MoveBranch(refName string) error {
 	}
 	fmt.Printf("INFO:   delete %s\n", refName)
 	deleteSpec := config.RefSpec(fmt.Sprintf(":refs/heads/%s", refName))
-	err = g.Repo.Push(&git.PushOptions{
+	err = g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{deleteSpec},
 	})
