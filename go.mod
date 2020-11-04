@@ -1,4 +1,4 @@
-module groomba
+module github.com/avbm/groomba
 
 go 1.15
 

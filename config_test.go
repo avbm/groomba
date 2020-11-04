@@ -1,4 +1,4 @@
-package main
+package groomba
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	cfg, err := getConfig(".")
+	cfg, err := GetConfig(".")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -20,12 +20,12 @@ func TestConfig(t *testing.T) {
 		a.Equal([]string{"main", "master", "production"}, cfg.StaticBranches)
 	})
 
-	cfg, err = getConfig("testdata")
+	cfg, err = GetConfig("testdata")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	t.Run("Configs from .groomba.toml should override defaults", func(t *testing.T) {
+	t.Run("Configs from .groomba.yaml should override defaults", func(t *testing.T) {
 		a := assert.New(t)
 		a.Equal(10, cfg.StaleAgeThreshold)
 		a.Equal([]string{"main", "teststatic"}, cfg.StaticBranches)
@@ -33,12 +33,12 @@ func TestConfig(t *testing.T) {
 
 	os.Setenv("GROOMBA_STALE_AGE_THRESHOLD", "7")
 	os.Setenv("GROOMBA_STATIC_BRANCHES", "main,master")
-	cfg, err = getConfig("testdata")
+	cfg, err = GetConfig("testdata")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	t.Run("Configs from Environment should override .groomba.toml and defaults", func(t *testing.T) {
+	t.Run("Configs from Environment should override .groomba.yaml and defaults", func(t *testing.T) {
 		a := assert.New(t)
 		a.Equal(7, cfg.StaleAgeThreshold)
 		a.Equal([]string{"main", "master"}, cfg.StaticBranches)

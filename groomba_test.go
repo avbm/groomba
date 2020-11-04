@@ -1,4 +1,4 @@
-package main
+package groomba
 
 import (
 	"os"
@@ -49,17 +49,17 @@ func TestInit(t *testing.T) {
 func TestGroomba(t *testing.T) {
 	TestInit(t)
 
-	cfg, _ := getConfig(".")
-	g := Groomba{cfg: cfg}
+	cfg, _ := GetConfig(".")
+	repo, _ := git.PlainOpen("testdata/dst")
+	g := Groomba{Cfg: cfg, Repo: repo}
 	t.Run("main branch should be static", func(t *testing.T) {
 		a := assert.New(t)
-		a.Equal(true, g.isStaticBranch("refs/remotes/origin/main"))
-		a.Equal(true, g.isStaticBranch("refs/remotes/origin/master"))
+		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/main"))
+		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/master"))
 	})
 
-	repo, _ := git.PlainOpen("testdata/dst")
 	today, _ := time.Parse(time.RFC3339, "2020-01-20T00:00:00Z")
-	fb, _ := g.filterBranches(repo, today)
+	fb, _ := g.FilterBranches(today)
 	t.Run("stale branch should be detected", func(t *testing.T) {
 		a := assert.New(t)
 
@@ -68,7 +68,7 @@ func TestGroomba(t *testing.T) {
 		a.Equal("origin/IsStale", actual)
 	})
 
-	g.moveStaleBranches(repo, fb)
+	g.MoveStaleBranches(fb)
 	upstream, _ := git.PlainOpen("testdata/src")
 	t.Run("main branch should not be removed from origin", func(t *testing.T) {
 		a := assert.New(t)
