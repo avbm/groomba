@@ -1,6 +1,6 @@
 .vscode/*
 __*
-groomba
+./groomba
 testdata/src
 testdata/src/*
 testdata/dst
