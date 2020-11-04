@@ -1,5 +1,5 @@
 builds:
-  - binary: gitversion
+  - binary: groomba
     # Build for Linux and OSX
     goos:
       - linux
