@@ -47,6 +47,8 @@ jobs:
         rm -f ./gitversion
 
     - name: Release
-      run: "curl -sL https://git.io/goreleaser | bash"
+      run: |
+        git reset --hard HEAD
+        curl -sL https://git.io/goreleaser | bash
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
