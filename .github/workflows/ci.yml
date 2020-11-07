@@ -44,6 +44,7 @@ jobs:
         chmod +x gitversion
         git fetch --tags
         ./gitversion --prefix v bump auto
+        git push --tags
         rm -f ./gitversion
 
     - name: Release
