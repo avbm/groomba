@@ -27,29 +27,30 @@ func TestInit(t *testing.T) {
 	os.MkdirAll("testdata/src", 0755)
 	os.Chdir("testdata/src")
 	now := time.Now()
+	nowDate := now.Format(time.RFC3339)
 	zeroDate := now.AddDate(0, 0, -20).Format(time.RFC3339)
 	staleDate := now.AddDate(0, 0, -19).Format(time.RFC3339)
 	freshDate := now.AddDate(0, 0, -5).Format(time.RFC3339)
 	gitCommands := [][]string{
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", zeroDate), "init"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", zeroDate), "config user.email 'test@user.com'"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", zeroDate), "config user.name 'Test User'"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", zeroDate), fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", staleDate), "checkout -b IsStale"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", staleDate), fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", freshDate), "checkout -b IsFresh"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", freshDate), fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", now.Format(time.RFC3339)), "checkout IsStale"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", now.Format(time.RFC3339)), "checkout -b StaleCommitFreshCommitter"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", now.Format(time.RFC3339)), "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", now.Format(time.RFC3339)), "rebase HEAD~1"},
-		[]string{fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", now.Format(time.RFC3339)), "checkout master"},
+		[]string{zeroDate, "init"},
+		[]string{zeroDate, "config user.email 'test@user.com'"},
+		[]string{zeroDate, "config user.name 'Test User'"},
+		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
+		[]string{staleDate, "checkout -b IsStale"},
+		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		[]string{freshDate, "checkout -b IsFresh"},
+		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
+		[]string{nowDate, "checkout IsStale"},
+		[]string{nowDate, "checkout -b StaleCommitFreshCommitter"},
+		[]string{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
+		[]string{nowDate, "rebase HEAD~1"},
+		[]string{nowDate, "checkout master"},
 	}
 	for _, value := range gitCommands {
-		env, args := value[0], value[1]
+		committerDate, args := value[0], value[1]
 		cmd := exec.Command("git", strings.Split(args, " ")...)
 		cmd.Env = append(os.Environ(),
-			env,
+			fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", committerDate),
 		)
 		err := cmd.Run()
 		CheckTestInitError(err, "git", args)
