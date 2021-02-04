@@ -84,7 +84,7 @@ func (g Groomba) FilterBranches(referenceDate time.Time) ([]*plumbing.Reference,
 			if err != nil {
 				fmt.Printf("WARN: failed to calculate age for ref: %s, err: %s\n", ref, err)
 			}
-			if referenceDate.Sub(commit.Author.When) > t {
+			if referenceDate.Sub(commit.Committer.When) > t {
 				filteredBranches = append(filteredBranches, ref)
 			}
 		}
@@ -107,7 +107,7 @@ func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) erro
 
 		b := &Branch{
 			Name: ref.Name().String(),
-			Age:  fmt.Sprintf("%dd", int64(time.Since(commit.Author.When).Hours()/24)),
+			Age:  fmt.Sprintf("%dd", int64(time.Since(commit.Committer.When).Hours()/24)),
 		}
 		if _, ok := authors[commit.Author.Name]; ok {
 			authors[commit.Author.Name] = append(authors[commit.Author.Name], b)
