@@ -127,3 +127,71 @@ func TestGroomba(t *testing.T) {
 		a.Equal(4, count)
 	})
 }
+
+
+func TestGroombaNoop(t *testing.T) {
+	TestInit(t)
+
+	os.Setenv("GROOMBA_NOOP", "true")
+	cfg, _ := GetConfig(".")
+	repo, _ := git.PlainOpen("testdata/dst")
+	g := Groomba{cfg: cfg, repo: repo}
+	t.Run("main branch should be static", func(t *testing.T) {
+		a := assert.New(t)
+		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/main"))
+		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/master"))
+	})
+
+	today := time.Now()
+	fb, _ := g.FilterBranches(today)
+	t.Run("Only stale branch should be detected", func(t *testing.T) {
+		a := assert.New(t)
+
+		a.Equal(1, len(fb))
+		actual := fb[0].Name().Short()
+		a.Equal("origin/IsStale", actual)
+	})
+
+	g.MoveStaleBranches(fb)
+	upstream, _ := git.PlainOpen("testdata/src")
+	t.Run("main branch should not be removed from origin", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/master", false)
+		a.Nil(err)
+	})
+
+	t.Run("fresh branch should not be removed from origin", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/IsFresh", false)
+		a.Nil(err)
+	})
+
+	t.Run("fresh branch with stale commit date should not be removed from origin", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/StaleCommitFreshCommitter", false)
+		a.Nil(err)
+	})
+
+	t.Run("stale branch should not be removed from origin in noop mode", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/IsStale", false)
+		a.Nil(err)
+	})
+
+	t.Run("stale branch should not be renamed at origin in noop mode", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/stale/IsStale", false)
+		a.Equal("reference not found", err.Error())
+	})
+
+	t.Run("origin should have exactly 4 branches", func(t *testing.T) {
+		a := assert.New(t)
+		count := 0
+		b, _ := upstream.Branches()
+		b.ForEach(func(ref *plumbing.Reference) error {
+			count++
+			return nil
+		})
+		a.Equal(4, count)
+	})
+}

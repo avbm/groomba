@@ -77,6 +77,26 @@ stale_age_threshold:
 GROOMBA_STATIC_BRANCHES="latest,staging,production"
 ```
 
+### Noop
+
+`Noop` is boolean that tells Groomba whether to run in noop mode. In noop mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
+
+Default is `false`
+
+To set to a different value say `true`:
+```
+# in .groomba.toml
+noop = true
+
+# or in .groomba.yaml
+noop: true
+
+# or as an environment variable
+GROOMBA_NOOP="true"
+```
+
+Note: Any truthy value will enable: `true`, `True`, `1` or any falsy value will disable: `false`, `False`, `0`
+
 ## Planned Improvements
 
 List of enhancements for Groomba in no particular order:
