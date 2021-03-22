@@ -33,15 +33,20 @@ This should fetch all dependencies and create a binary called `groomba` in the c
 
 To configure Groomba, you can set each configuration option in a `.groomba.toml` or `.groomba.yaml` file at the root of the repository you want to Groom. Alternately these options can also be set as environment variables. Options set as environment variables take the highest precedence.
 
-Currently only 2 configuration options are supported:
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| StaleAgeThreshold | int | `14` | Threshold age in days for considering a branch as stale |
+| StaticBranches    | []string | `["master", "main"]` | List of branches that are considered as `static` or `protected` and will be ignored |
+| Prefix            | string | `stale/` | Identifier that will be added to the beginning of stale branch names to mark them as stale |
+| Noop              | bool | `false` | Toggle to enable or disable no-operation aka dry mode |
 
 ### StaleAgeThreshold
 
 `StaleAgeThreshold` is the threshold age in days for considering a branch as `stale`. It is expected to be an integer.
 
-Default value is `14`
+Default: `14`
 
-To set to a different value say 30:
+To set to a different value, say `30`:
 ```
 # in .groomba.toml
 stale_age_threshold = 30
@@ -57,9 +62,9 @@ GROOMBA_STALE_AGE_THRESHOLD=3
 
 `StaticBranches` is a list of branches that Groomba considers as `static` or `protected` and will ignore.
 
-Default is `["master", "main"]`
+Default: `["master", "main"]`
 
-To set to a different value say `["latest", "staging", "production"]`:
+To set to a different value, say `["latest", "staging", "production"]`:
 ```
 # in .groomba.toml
 static_branches = ["latest", "staging", "production"]
@@ -81,9 +86,9 @@ GROOMBA_STATIC_BRANCHES="latest,staging,production"
 
 `Prefix` is a string that will be added to the beginning of stale branch names to mark them as stale.
 
-Default is `stale/`
+Default: `stale/`
 
-To set to a different value say `zzz_` to keep stale branches at the bottom during sorted views:
+To set to a different value, say `zzz_`, to keep stale branches at the bottom during sorted views:
 ```
 # in .groomba.toml
 prefix = zzz_
@@ -97,11 +102,11 @@ GROOMBA_PREFIX="zzz_"
 
 ### Noop
 
-`Noop` is a boolean that tells Groomba whether to run in noop mode. In noop mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
+`Noop` is a boole that tells Groomba whether to run in no-operation mode aka dry mode. In noop mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
 
-Default is `false`
+Default: `false`
 
-To set to a different value say `true`:
+To set to a different value, say `true`:
 ```
 # in .groomba.toml
 noop = true
