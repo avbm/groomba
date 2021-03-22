@@ -27,10 +27,11 @@ func InitTest() {
 	os.MkdirAll("testdata/src", 0755)
 	os.Chdir("testdata/src")
 	now := time.Now()
-	nowDate := now.Format(time.RFC3339)
-	zeroDate := now.AddDate(0, 0, -20).Format(time.RFC3339)
-	staleDate := now.AddDate(0, 0, -19).Format(time.RFC3339)
-	freshDate := now.AddDate(0, 0, -5).Format(time.RFC3339)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	nowDate := today.Format(time.RFC3339)
+	zeroDate := today.AddDate(0, 0, -20).Format(time.RFC3339)
+	staleDate := today.AddDate(0, 0, -19).Format(time.RFC3339)
+	freshDate := today.AddDate(0, 0, -5).Format(time.RFC3339)
 	gitCommands := [][]string{
 		[]string{zeroDate, "init"},
 		[]string{zeroDate, "config user.email 'test@user.com'"},
@@ -76,9 +77,9 @@ func ExampleGroomba_PrintBranchesGroupbyAuthor() {
 	// Output:
 	// Test:
 	//     - name: refs/remotes/origin/IsStale
-	//       age: 18d
+	//       age: 19d
 	//     - name: refs/remotes/origin/IsStale2
-	//       age: 18d
+	//       age: 19d
 }
 
 func TestGroomba(t *testing.T) {
