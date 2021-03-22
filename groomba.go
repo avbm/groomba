@@ -149,11 +149,15 @@ func (g Groomba) MoveBranch(refName string) error {
 
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 	for _, ref := range branches {
-		fmt.Printf("INFO: Moving branch %s\n", ref.Name().Short())
-		refName := ref.Name().Short()[7:]
-		err := g.MoveBranch(refName)
-		if err != nil {
-			return err
+		if g.cfg.Noop {
+			fmt.Printf("INFO: Would have moved branch %s -- skipping since noop=true\n", ref.Name().Short())
+		} else {
+			fmt.Printf("INFO: Moving branch %s\n", ref.Name().Short())
+			refName := ref.Name().Short()[7:]
+			err := g.MoveBranch(refName)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

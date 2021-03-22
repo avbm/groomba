@@ -1,8 +1,8 @@
 # Groomba
 
-[![GitHub Workflow Status](https://github.com/avbm/groomba/actions/workflows/ci.yml/badge.svg)](https://github.com/avbm/groomba/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go%20version-%3E=1.16-61CFDD.svg?style=flat-square)](https://golang.org/doc/devel/release.html)
-[![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/avbm/groomba)](https://pkg.go.dev/mod/github.com/avbm/groomba)
+[![GitHub Workflow Status](https://github.com/avbm/groomba/actions/workflows/ci.yml/badge.svg?style=flat)](https://github.com/avbm/groomba/actions/workflows/ci.yml)
+[![Go Version](https://img.shields.io/badge/go%20version-%3E=1.16-61CFDD.svg?style=flat)](https://golang.org/doc/devel/release.html)
+[![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/avbm/groomba?style=flat)](https://pkg.go.dev/mod/github.com/avbm/groomba)
 
 Groomba is a simple utility written in [Go](https://golang.org/) to groom your git repositories. It will rename branches older than a defined age. Unlike other tools like the [Stale Github Action](https://github.com/actions/stale), Groomba only depends on the git APIs and is agnostic of the software used to host your git repository. It will work just as well whether your repos are hosted in Github, Gitlab, Btbucket or something else.
 
@@ -76,6 +76,26 @@ stale_age_threshold:
 # or as an environment variable
 GROOMBA_STATIC_BRANCHES="latest,staging,production"
 ```
+
+### Noop
+
+`Noop` is boolean that tells Groomba whether to run in noop mode. In noop mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
+
+Default is `false`
+
+To set to a different value say `true`:
+```
+# in .groomba.toml
+noop = true
+
+# or in .groomba.yaml
+noop: true
+
+# or as an environment variable
+GROOMBA_NOOP="true"
+```
+
+Note: Any truthy value will enable: `true`, `True`, `1` or any falsy value will disable: `false`, `False`, `0`
 
 ## Planned Improvements
 

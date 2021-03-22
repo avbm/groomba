@@ -26,6 +26,7 @@ import (
 type Config struct {
 	StaleAgeThreshold int      `yaml:"stale_age_threshold" toml:"stale_age_threshold"`
 	StaticBranches    []string `yaml:"static_branches" toml:"static_branches"`
+	Noop              bool     `yaml:"noop" toml:"noop"`
 }
 
 func GetConfig(configPath string) (*Config, error) {
@@ -43,6 +44,9 @@ func GetConfig(configPath string) (*Config, error) {
 	if err := viper.BindEnv("static_branches", "GROOMBA_STATIC_BRANCHES"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env static_branches: %s", err)
 	}
+	if err := viper.BindEnv("noop", "GROOMBA_NOOP"); err != nil {
+		return nil, fmt.Errorf("getConfig: failed to bind env noop: %s", err)
+	}
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -51,7 +55,7 @@ func GetConfig(configPath string) (*Config, error) {
 		}
 	}
 
-	fmt.Printf("DEBUG: %v\n", viper.AllSettings())
+	// fmt.Printf("DEBUG: %v\n", viper.AllSettings())
 	var cfg Config
 	err = viper.Unmarshal(&cfg)
 	if err != nil {

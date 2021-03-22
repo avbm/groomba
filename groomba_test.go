@@ -18,7 +18,7 @@ func CheckTestInitError(err error, msg ...string) {
 	CheckIfError(err, msg...)
 }
 
-func TestInit(t *testing.T) {
+func InitTest() {
 	// cleanup dirs from previous tests
 	os.RemoveAll("testdata/src")
 	os.RemoveAll("testdata/dst")
@@ -27,10 +27,11 @@ func TestInit(t *testing.T) {
 	os.MkdirAll("testdata/src", 0755)
 	os.Chdir("testdata/src")
 	now := time.Now()
-	nowDate := now.Format(time.RFC3339)
-	zeroDate := now.AddDate(0, 0, -20).Format(time.RFC3339)
-	staleDate := now.AddDate(0, 0, -19).Format(time.RFC3339)
-	freshDate := now.AddDate(0, 0, -5).Format(time.RFC3339)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	nowDate := today.Format(time.RFC3339)
+	zeroDate := today.AddDate(0, 0, -20).Format(time.RFC3339)
+	staleDate := today.AddDate(0, 0, -19).Format(time.RFC3339)
+	freshDate := today.AddDate(0, 0, -5).Format(time.RFC3339)
 	gitCommands := [][]string{
 		[]string{zeroDate, "init"},
 		[]string{zeroDate, "config user.email 'test@user.com'"},
@@ -38,8 +39,10 @@ func TestInit(t *testing.T) {
 		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
 		[]string{staleDate, "checkout -b IsStale"},
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		[]string{staleDate, "checkout -b IsStale2"},
 		[]string{freshDate, "checkout -b IsFresh"},
 		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
+		[]string{freshDate, "checkout -b IsFresh2"},
 		[]string{nowDate, "checkout IsStale"},
 		[]string{nowDate, "checkout -b StaleCommitFreshCommitter"},
 		[]string{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
@@ -62,8 +65,25 @@ func TestInit(t *testing.T) {
 	CheckTestInitError(err)
 }
 
+func ExampleGroomba_PrintBranchesGroupbyAuthor() {
+	InitTest()
+
+	cfg, _ := GetConfig(".")
+	repo, _ := git.PlainOpen("testdata/dst")
+	g := Groomba{cfg: cfg, repo: repo}
+
+	fb, _ := g.FilterBranches(time.Now())
+	g.PrintBranchesGroupbyAuthor(fb)
+	// Output:
+	// Test:
+	//     - name: refs/remotes/origin/IsStale
+	//       age: 19d
+	//     - name: refs/remotes/origin/IsStale2
+	//       age: 19d
+}
+
 func TestGroomba(t *testing.T) {
-	TestInit(t)
+	InitTest()
 
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
@@ -76,10 +96,10 @@ func TestGroomba(t *testing.T) {
 
 	today := time.Now()
 	fb, _ := g.FilterBranches(today)
-	t.Run("Only stale branch should be detected", func(t *testing.T) {
+	t.Run("Only stale branches should be detected", func(t *testing.T) {
 		a := assert.New(t)
 
-		a.Equal(1, len(fb))
+		a.Equal(2, len(fb))
 		actual := fb[0].Name().Short()
 		a.Equal("origin/IsStale", actual)
 	})
@@ -124,6 +144,73 @@ func TestGroomba(t *testing.T) {
 			count++
 			return nil
 		})
-		a.Equal(4, count)
+		a.Equal(6, count)
+	})
+}
+
+func TestGroombaNoop(t *testing.T) {
+	InitTest()
+
+	os.Setenv("GROOMBA_NOOP", "true")
+	cfg, _ := GetConfig(".")
+	repo, _ := git.PlainOpen("testdata/dst")
+	g := Groomba{cfg: cfg, repo: repo}
+	t.Run("main branch should be static", func(t *testing.T) {
+		a := assert.New(t)
+		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/main"))
+		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/master"))
+	})
+
+	today := time.Now()
+	fb, _ := g.FilterBranches(today)
+	t.Run("Only stale branches should be detected", func(t *testing.T) {
+		a := assert.New(t)
+
+		a.Equal(2, len(fb))
+		actual := fb[0].Name().Short()
+		a.Equal("origin/IsStale", actual)
+	})
+
+	g.MoveStaleBranches(fb)
+	upstream, _ := git.PlainOpen("testdata/src")
+	t.Run("main branch should not be removed from origin", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/master", false)
+		a.Nil(err)
+	})
+
+	t.Run("fresh branch should not be removed from origin", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/IsFresh", false)
+		a.Nil(err)
+	})
+
+	t.Run("fresh branch with stale commit date should not be removed from origin", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/StaleCommitFreshCommitter", false)
+		a.Nil(err)
+	})
+
+	t.Run("stale branch should not be removed from origin in noop mode", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/IsStale", false)
+		a.Nil(err)
+	})
+
+	t.Run("stale branch should not be renamed at origin in noop mode", func(t *testing.T) {
+		a := assert.New(t)
+		_, err := upstream.Reference("refs/heads/stale/IsStale", false)
+		a.Equal("reference not found", err.Error())
+	})
+
+	t.Run("origin should have exactly 4 branches", func(t *testing.T) {
+		a := assert.New(t)
+		count := 0
+		b, _ := upstream.Branches()
+		b.ForEach(func(ref *plumbing.Reference) error {
+			count++
+			return nil
+		})
+		a.Equal(6, count)
 	})
 }
