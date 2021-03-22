@@ -1,8 +1,8 @@
 # Groomba
 
-[![GitHub Workflow Status](https://github.com/avbm/groomba/actions/workflows/ci.yml/badge.svg)](https://github.com/avbm/groomba/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go%20version-%3E=1.16-61CFDD.svg?style=flat-square)](https://golang.org/doc/devel/release.html)
-[![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/avbm/groomba)](https://pkg.go.dev/mod/github.com/avbm/groomba)
+[![GitHub Workflow Status](https://github.com/avbm/groomba/actions/workflows/ci.yml/badge.svg?style=flat)](https://github.com/avbm/groomba/actions/workflows/ci.yml)
+[![Go Version](https://img.shields.io/badge/go%20version-%3E=1.16-61CFDD.svg?style=flat)](https://golang.org/doc/devel/release.html)
+[![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/avbm/groomba?style=flat)](https://pkg.go.dev/mod/github.com/avbm/groomba)
 
 Groomba is a simple utility written in [Go](https://golang.org/) to groom your git repositories. It will rename branches older than a defined age. Unlike other tools like the [Stale Github Action](https://github.com/actions/stale), Groomba only depends on the git APIs and is agnostic of the software used to host your git repository. It will work just as well whether your repos are hosted in Github, Gitlab, Btbucket or something else.
 
