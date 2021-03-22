@@ -77,9 +77,27 @@ stale_age_threshold:
 GROOMBA_STATIC_BRANCHES="latest,staging,production"
 ```
 
+### Prefix
+
+`Prefix` is a string that will be added to the beginning of stale branch names to mark them as stale.
+
+Default is `stale/`
+
+To set to a different value say `zzz_` to keep stale branches at the bottom during sorted views:
+```
+# in .groomba.toml
+prefix = zzz_
+
+# or in .groomba.yaml
+prefix: zzz_
+
+# or as an environment variable
+GROOMBA_PREFIX="zzz_"
+```
+
 ### Noop
 
-`Noop` is boolean that tells Groomba whether to run in noop mode. In noop mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
+`Noop` is a boolean that tells Groomba whether to run in noop mode. In noop mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
 
 Default is `false`
 
@@ -102,8 +120,6 @@ Note: Any truthy value will enable: `true`, `True`, `1` or any falsy value will 
 List of enhancements for Groomba in no particular order:
 - A good logo: every open source tool needs a good logo ;)
 - Passing command line flags and arguments: currently I am planning on adding support for arguments and flags using [Cobra](https://github.com/spf13/cobra)
-- Noop mode: add a noop mode where groomba just outputs changes it would have made without making them
-- Custom rename prefix: currently Groomba only supports renaming to a `stale/` prefix. Ideally this should be a configurable parameter
 - Delete (really) old branches: delete branches older than a set threshold instead of renaming them
 - Better install scripts and documentation
 

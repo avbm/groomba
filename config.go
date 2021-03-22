@@ -26,6 +26,7 @@ import (
 type Config struct {
 	StaleAgeThreshold int      `yaml:"stale_age_threshold" toml:"stale_age_threshold"`
 	StaticBranches    []string `yaml:"static_branches" toml:"static_branches"`
+	Prefix            string   `yaml:"prefix" toml:"prefix"`
 	Noop              bool     `yaml:"noop" toml:"noop"`
 }
 
@@ -37,12 +38,16 @@ func GetConfig(configPath string) (*Config, error) {
 	viper.RegisterAlias("StaleAgeThreshold", "stale_age_threshold")
 	viper.SetDefault("static_branches", []string{"main", "master", "production"})
 	viper.RegisterAlias("StaticBranches", "static_branches")
+	viper.SetDefault("prefix", "stale/")
 
 	if err := viper.BindEnv("stale_age_threshold", "GROOMBA_STALE_AGE_THRESHOLD"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env stale_age_threshold: %s", err)
 	}
 	if err := viper.BindEnv("static_branches", "GROOMBA_STATIC_BRANCHES"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env static_branches: %s", err)
+	}
+	if err := viper.BindEnv("prefix", "GROOMBA_PREFIX"); err != nil {
+		return nil, fmt.Errorf("getConfig: failed to bind env prefix: %s", err)
 	}
 	if err := viper.BindEnv("noop", "GROOMBA_NOOP"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env noop: %s", err)
