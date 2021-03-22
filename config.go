@@ -55,7 +55,7 @@ func GetConfig(configPath string) (*Config, error) {
 		}
 	}
 
-	fmt.Printf("DEBUG: %v\n", viper.AllSettings())
+	// fmt.Printf("DEBUG: %v\n", viper.AllSettings())
 	var cfg Config
 	err = viper.Unmarshal(&cfg)
 	if err != nil {

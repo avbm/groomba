@@ -18,7 +18,7 @@ func CheckTestInitError(err error, msg ...string) {
 	CheckIfError(err, msg...)
 }
 
-func TestInit(t *testing.T) {
+func InitTest() {
 	// cleanup dirs from previous tests
 	os.RemoveAll("testdata/src")
 	os.RemoveAll("testdata/dst")
@@ -38,8 +38,10 @@ func TestInit(t *testing.T) {
 		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
 		[]string{staleDate, "checkout -b IsStale"},
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		[]string{staleDate, "checkout -b IsStale2"},
 		[]string{freshDate, "checkout -b IsFresh"},
 		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
+		[]string{freshDate, "checkout -b IsFresh2"},
 		[]string{nowDate, "checkout IsStale"},
 		[]string{nowDate, "checkout -b StaleCommitFreshCommitter"},
 		[]string{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
@@ -62,8 +64,25 @@ func TestInit(t *testing.T) {
 	CheckTestInitError(err)
 }
 
+func ExampleGroomba_PrintBranchesGroupbyAuthor() {
+	InitTest()
+
+	cfg, _ := GetConfig(".")
+	repo, _ := git.PlainOpen("testdata/dst")
+	g := Groomba{cfg: cfg, repo: repo}
+
+	fb, _ := g.FilterBranches(time.Now())
+	g.PrintBranchesGroupbyAuthor(fb)
+	// Output:
+	// Test:
+	//     - name: refs/remotes/origin/IsStale
+	//       age: 18d
+	//     - name: refs/remotes/origin/IsStale2
+	//       age: 18d
+}
+
 func TestGroomba(t *testing.T) {
-	TestInit(t)
+	InitTest()
 
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
@@ -76,10 +95,10 @@ func TestGroomba(t *testing.T) {
 
 	today := time.Now()
 	fb, _ := g.FilterBranches(today)
-	t.Run("Only stale branch should be detected", func(t *testing.T) {
+	t.Run("Only stale branches should be detected", func(t *testing.T) {
 		a := assert.New(t)
 
-		a.Equal(1, len(fb))
+		a.Equal(2, len(fb))
 		actual := fb[0].Name().Short()
 		a.Equal("origin/IsStale", actual)
 	})
@@ -124,13 +143,12 @@ func TestGroomba(t *testing.T) {
 			count++
 			return nil
 		})
-		a.Equal(4, count)
+		a.Equal(6, count)
 	})
 }
 
-
 func TestGroombaNoop(t *testing.T) {
-	TestInit(t)
+	InitTest()
 
 	os.Setenv("GROOMBA_NOOP", "true")
 	cfg, _ := GetConfig(".")
@@ -144,10 +162,10 @@ func TestGroombaNoop(t *testing.T) {
 
 	today := time.Now()
 	fb, _ := g.FilterBranches(today)
-	t.Run("Only stale branch should be detected", func(t *testing.T) {
+	t.Run("Only stale branches should be detected", func(t *testing.T) {
 		a := assert.New(t)
 
-		a.Equal(1, len(fb))
+		a.Equal(2, len(fb))
 		actual := fb[0].Name().Short()
 		a.Equal("origin/IsStale", actual)
 	})
@@ -192,6 +210,6 @@ func TestGroombaNoop(t *testing.T) {
 			count++
 			return nil
 		})
-		a.Equal(4, count)
+		a.Equal(6, count)
 	})
 }
