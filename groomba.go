@@ -73,7 +73,7 @@ func (g Groomba) FilterBranches(referenceDate time.Time) ([]*plumbing.Reference,
 			!g.IsStaticBranch(ref.Name().String()) &&
 			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/revert") &&
 			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/cherry-pick") &&
-			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/stale") {
+			!strings.HasPrefix(ref.Name().String(), fmt.Sprintf("refs/remotes/origin/%s", g.cfg.Prefix)) {
 
 			commit, err := g.repo.CommitObject(ref.Hash())
 			if err != nil {
@@ -127,7 +127,11 @@ func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) erro
 }
 
 func (g Groomba) MoveBranch(refName string) error {
-	newRefName := "stale/" + refName
+	newRefName := g.cfg.Prefix + refName
+	if g.cfg.Noop {
+		fmt.Printf("INFO: Would have moved branch %s to %s -- skipping since noop=true\n", refName, newRefName)
+		return nil
+	}
 	fmt.Printf("INFO:   copy %s to %s\n", refName, newRefName)
 	renameSpec := config.RefSpec(fmt.Sprintf("refs/remotes/origin/%s:refs/heads/%s", refName, newRefName))
 	err := g.repo.Push(&git.PushOptions{
@@ -149,15 +153,11 @@ func (g Groomba) MoveBranch(refName string) error {
 
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 	for _, ref := range branches {
-		if g.cfg.Noop {
-			fmt.Printf("INFO: Would have moved branch %s -- skipping since noop=true\n", ref.Name().Short())
-		} else {
-			fmt.Printf("INFO: Moving branch %s\n", ref.Name().Short())
-			refName := ref.Name().Short()[7:]
-			err := g.MoveBranch(refName)
-			if err != nil {
-				return err
-			}
+		fmt.Printf("INFO: Moving branch %s\n", ref.Name().Short())
+		refName := ref.Name().Short()[7:]
+		err := g.MoveBranch(refName)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
