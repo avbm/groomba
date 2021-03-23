@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-set -x
+
 RELEASES_URL="https://github.com/avbm/groomba/releases"
 test -z "$TMPDIR" && TMPDIR="$(mktemp -d)"
 
