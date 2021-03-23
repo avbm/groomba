@@ -8,24 +8,30 @@ Groomba is a simple utility written in [Go](https://golang.org/) to groom your g
 
 ## Installation
 
-Download and install latest version (assuming linux):
+Download and run latest version:
 ```
-LATEST_VERSION=$(curl https://github.com/avbm/groomba/releases/latest | sed 's/^.*href="//' | cut -d'"' -f1 | rev | cut -d/ -f1 | rev)
-curl "https://github.com/avbm/groomba/releases/download/${LATEST_VERSION}/groomba_linux_amd64" -o groomba
-chmod +x groomba
-./groomba
+curl -sL https://git.io/groomba | bash
+```
+
+Download and run specific version, ex v0.2.10:
+```
+curl -sL https://git.io/groomba | VERSION=v0.2.10 bash
 ```
 
 You can add the snippet above as a step in your CI pipeline on your main branch to periodically groom your repository.
 
-Replace `linux` with `darwin` for Mac OSX builds.
+Install using `go install`
+```
+go install github.com/avbm/groomba/cmd/groomba@latest
+```
+
 Pre-built binaries are available only for x86_64 linux and OSX. For other architectures and OS systems please build your binaries using the [Build from souce](#build-from-source) section.
 
 ## Build from source
 
 To build Groomba from source you need to have the golang compiler installed and configured. Clone this repository and from the root of the repository run:
 ```
-$ go build .
+$ cd cmd/groomba && go build .
 ```
 This should fetch all dependencies and create a binary called `groomba` in the current directory.
 
@@ -126,7 +132,6 @@ List of enhancements for Groomba in no particular order:
 - A good logo: every open source tool needs a good logo ;)
 - Passing command line flags and arguments: currently I am planning on adding support for arguments and flags using [Cobra](https://github.com/spf13/cobra)
 - Delete (really) old branches: delete branches older than a set threshold instead of renaming them
-- Better install scripts and documentation
 
 ## Bugs and feature requests
 
