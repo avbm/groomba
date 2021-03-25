@@ -149,10 +149,10 @@ func TestGroomba(t *testing.T) {
 	})
 }
 
-func TestGroombaNoop(t *testing.T) {
+func TestGroombaDryRun(t *testing.T) {
 	InitTest()
 
-	os.Setenv("GROOMBA_NOOP", "true")
+	os.Setenv("GROOMBA_DRY_RUN", "true")
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
 	g := Groomba{cfg: cfg, repo: repo}
@@ -192,13 +192,13 @@ func TestGroombaNoop(t *testing.T) {
 		a.Nil(err)
 	})
 
-	t.Run("stale branch should not be removed from origin in noop mode", func(t *testing.T) {
+	t.Run("stale branch should not be removed from origin in dry_run mode", func(t *testing.T) {
 		a := assert.New(t)
 		_, err := upstream.Reference("refs/heads/IsStale", false)
 		a.Nil(err)
 	})
 
-	t.Run("stale branch should not be renamed at origin in noop mode", func(t *testing.T) {
+	t.Run("stale branch should not be renamed at origin in dry_run mode", func(t *testing.T) {
 		a := assert.New(t)
 		_, err := upstream.Reference("refs/heads/stale/IsStale", false)
 		a.Equal("reference not found", err.Error())
@@ -220,7 +220,7 @@ func TestGroombaPrefix(t *testing.T) {
 	InitTest()
 
 	os.Setenv("GROOMBA_PREFIX", "zzz/")
-	os.Setenv("GROOMBA_NOOP", "false")
+	os.Setenv("GROOMBA_DRY_RUN", "false")
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
 	g := Groomba{cfg: cfg, repo: repo}

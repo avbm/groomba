@@ -4,4 +4,4 @@
 stale_age_threshold: 10
 static_branches: ["main", "teststatic"]
 prefix: zzz_
-noop: true
+dry_run: true

@@ -128,8 +128,8 @@ func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) erro
 
 func (g Groomba) MoveBranch(refName string) error {
 	newRefName := g.cfg.Prefix + refName
-	if g.cfg.Noop {
-		fmt.Printf("INFO: Would have moved branch %s to %s -- skipping since noop=true\n", refName, newRefName)
+	if g.cfg.DryRun {
+		fmt.Printf("INFO: Would have moved branch %s to %s -- skipping since dry_run=true\n", refName, newRefName)
 		return nil
 	}
 	fmt.Printf("INFO:   copy %s to %s\n", refName, newRefName)
