@@ -41,14 +41,35 @@ To configure Groomba, you can set each configuration option in a `.groomba.toml`
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| DryRu             | bool | `false` | Toggle to enable or disable dry run mode |
+| Clobber           | bool | `false` | Toggle to enable or disable clobber mode |
+| DryRun            | bool | `false` | Toggle to enable or disable dry run mode |
 | Prefix            | string | `stale/` | Identifier that will be added to the beginning of stale branch names to mark them as stale |
 | StaleAgeThreshold | int | `14` | Threshold age in days for considering a branch as stale |
 | StaticBranches    | []string | `["master", "main"]` | List of branches that are considered as `static` or `protected` and will be ignored |
 
+### Clobber
+
+`Clobber` is a bool that tells Groomba whether to run in clobber mode. In this mode, Groomba will clobber ie overwrite remote stale branches if they already exist and are not fast-forward merge-able. For example, if a repository has both branches `abc` and `stale/abc` already then with clobber mode enabled, branch `abc` will overwrite branch `stale/abc`. On the other hand if clobber mode is disabled(default), Groomba will fail to move `abc` to `stale/abc`.
+
+Default: `false`
+
+To set to a different value, say `true`:
+```
+# in .groomba.toml
+clobber = true
+
+# or in .groomba.yaml
+clobber: true
+
+# or as an environment variable
+GROOMBA_CLOBBER="true"
+```
+
+Note: Any truthy value will enable: `true`, `True`, `1` or any falsy value will disable: `false`, `False`, `0`
+
 ### DryRun
 
-`DryRun` is a boole that tells Groomba whether to run in dry run mode. In this mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
+`DryRun` is a bool that tells Groomba whether to run in dry run mode. In this mode, Groomba will only print out messages informing users about which branches would be moved without actually moving them.
 
 Default: `false`
 

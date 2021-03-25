@@ -137,10 +137,13 @@ func (g Groomba) MoveBranch(refName string) error {
 	err := g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{renameSpec},
+		Force:      g.cfg.Clobber,
 	})
 
 	if err != nil {
-		return err
+		if err != git.NoErrAlreadyUpToDate {
+			return err
+		}
 	}
 	fmt.Printf("INFO:   delete %s\n", refName)
 	deleteSpec := config.RefSpec(fmt.Sprintf(":refs/heads/%s", refName))
@@ -148,7 +151,12 @@ func (g Groomba) MoveBranch(refName string) error {
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{deleteSpec},
 	})
-	return err
+	if err != nil {
+		if err != git.NoErrAlreadyUpToDate {
+			return err
+		}
+	}
+	return nil
 }
 
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
