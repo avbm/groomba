@@ -1,7 +1,6 @@
 ---
-#StaleAgeThreshold: 10
-#StaticBranches: ["main", "teststatic"]
+clobber: true
+dry_run: true
+prefix: zzz_
 stale_age_threshold: 10
 static_branches: ["main", "teststatic"]
-prefix: zzz_
-dry_run: true

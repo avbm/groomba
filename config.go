@@ -24,6 +24,7 @@ import (
 
 // Config stores the configuration for Groomba
 type Config struct {
+	Clobber           bool     `yaml:"clobber" toml:"clobber"`
 	DryRun            bool     `yaml:"dry_run" toml:"dry_run"`
 	Prefix            string   `yaml:"prefix" toml:"prefix"`
 	StaleAgeThreshold int      `yaml:"stale_age_threshold" toml:"stale_age_threshold"`
@@ -41,17 +42,20 @@ func GetConfig(configPath string) (*Config, error) {
 	viper.RegisterAlias("StaticBranches", "static_branches")
 	viper.SetDefault("prefix", "stale/")
 
+	if err := viper.BindEnv("clobber", "GROOMBA_CLOBBER"); err != nil {
+		return nil, fmt.Errorf("getConfig: failed to bind env clobber: %s", err)
+	}
+	if err := viper.BindEnv("dry_run", "GROOMBA_DRY_RUN"); err != nil {
+		return nil, fmt.Errorf("getConfig: failed to bind env dry_run: %s", err)
+	}
+	if err := viper.BindEnv("prefix", "GROOMBA_PREFIX"); err != nil {
+		return nil, fmt.Errorf("getConfig: failed to bind env prefix: %s", err)
+	}
 	if err := viper.BindEnv("stale_age_threshold", "GROOMBA_STALE_AGE_THRESHOLD"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env stale_age_threshold: %s", err)
 	}
 	if err := viper.BindEnv("static_branches", "GROOMBA_STATIC_BRANCHES"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env static_branches: %s", err)
-	}
-	if err := viper.BindEnv("prefix", "GROOMBA_PREFIX"); err != nil {
-		return nil, fmt.Errorf("getConfig: failed to bind env prefix: %s", err)
-	}
-	if err := viper.BindEnv("dry_run", "GROOMBA_DRY_RUN"); err != nil {
-		return nil, fmt.Errorf("getConfig: failed to bind env dry_run: %s", err)
 	}
 
 	err := viper.ReadInConfig()

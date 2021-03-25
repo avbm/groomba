@@ -39,6 +39,7 @@ func InitTest() {
 		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
 		[]string{staleDate, "checkout -b IsStale"},
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		[]string{staleDate, "checkout -b stale/IsStale1"},  // Ensure "already up-to-date" is not returned as error
 		[]string{staleDate, "checkout -b IsStale2"},
 		[]string{freshDate, "checkout -b IsFresh"},
 		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
@@ -137,7 +138,7 @@ func TestGroomba(t *testing.T) {
 		a.Nil(err)
 	})
 
-	t.Run("origin should have exactly 4 branches", func(t *testing.T) {
+	t.Run("origin should have exactly 7 branches", func(t *testing.T) {
 		a := assert.New(t)
 		count := 0
 		b, _ := upstream.Branches()
@@ -145,7 +146,7 @@ func TestGroomba(t *testing.T) {
 			count++
 			return nil
 		})
-		a.Equal(6, count)
+		a.Equal(7, count)
 	})
 }
 
@@ -204,7 +205,7 @@ func TestGroombaDryRun(t *testing.T) {
 		a.Equal("reference not found", err.Error())
 	})
 
-	t.Run("origin should have exactly 4 branches", func(t *testing.T) {
+	t.Run("origin should have exactly 7 branches", func(t *testing.T) {
 		a := assert.New(t)
 		count := 0
 		b, _ := upstream.Branches()
@@ -212,7 +213,7 @@ func TestGroombaDryRun(t *testing.T) {
 			count++
 			return nil
 		})
-		a.Equal(6, count)
+		a.Equal(7, count)
 	})
 }
 
@@ -235,7 +236,7 @@ func TestGroombaPrefix(t *testing.T) {
 	t.Run("Only stale branches should be detected", func(t *testing.T) {
 		a := assert.New(t)
 
-		a.Equal(2, len(fb))
+		a.Equal(3, len(fb))  // Expected count is 3 here unlike 2 above since stale/IsStale is also detected here
 		actual := fb[0].Name().Short()
 		a.Equal("origin/IsStale", actual)
 	})
@@ -272,7 +273,7 @@ func TestGroombaPrefix(t *testing.T) {
 		a.Nil(err)
 	})
 
-	t.Run("origin should have exactly 4 branches", func(t *testing.T) {
+	t.Run("origin should have exactly 7 branches", func(t *testing.T) {
 		a := assert.New(t)
 		count := 0
 		b, _ := upstream.Branches()
@@ -280,6 +281,92 @@ func TestGroombaPrefix(t *testing.T) {
 			count++
 			return nil
 		})
-		a.Equal(6, count)
+		a.Equal(7, count)
+	})
+}
+
+func InitClobberTest() {
+	// cleanup dirs from previous tests
+	os.RemoveAll("testdata/src")
+	os.RemoveAll("testdata/dst")
+
+	// create source repo
+	os.MkdirAll("testdata/src", 0755)
+	os.Chdir("testdata/src")
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	nowDate := today.Format(time.RFC3339)
+	zeroDate := today.AddDate(0, 0, -20).Format(time.RFC3339)
+	staleDate := today.AddDate(0, 0, -19).Format(time.RFC3339)
+	freshDate := today.AddDate(0, 0, -5).Format(time.RFC3339)
+	gitCommands := [][]string{
+		[]string{zeroDate, "init"},
+		[]string{zeroDate, "config user.email 'test@user.com'"},
+		[]string{zeroDate, "config user.name 'Test User'"},
+		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
+		[]string{staleDate, "checkout -b stale/IsStale"},  // create branch to clobber
+		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		[]string{staleDate, "checkout master"},
+		[]string{staleDate, "checkout -b IsStale"},
+		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit2 --date \"%v\"", staleDate)},
+		[]string{staleDate, "checkout -b IsStale2"},
+		[]string{freshDate, "checkout -b IsFresh"},
+		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
+		[]string{freshDate, "checkout -b IsFresh2"},
+		[]string{nowDate, "checkout IsStale"},
+		[]string{nowDate, "checkout -b StaleCommitFreshCommitter"},
+		[]string{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
+		[]string{nowDate, "rebase HEAD~1"},
+		[]string{nowDate, "checkout master"},
+	}
+	for _, value := range gitCommands {
+		committerDate, args := value[0], value[1]
+		cmd := exec.Command("git", strings.Split(args, " ")...)
+		cmd.Env = append(os.Environ(),
+			fmt.Sprintf("GIT_COMMITTER_DATE=\"%v\"", committerDate),
+		)
+		err := cmd.Run()
+		CheckTestInitError(err, "git", args)
+	}
+	os.Chdir("../..")
+
+	// create cloned repo
+	err := exec.Command("git", "clone", "testdata/src", "testdata/dst").Run()
+	CheckTestInitError(err)
+}
+
+func TestGroombaClobber(t *testing.T) {
+	InitClobberTest()
+
+	os.Setenv("GROOMBA_PREFIX", "stale/")
+	os.Setenv("GROOMBA_CLOBBER", "false")
+	cfg, _ := GetConfig(".")
+	repo, _ := git.PlainOpen("testdata/dst")
+	g := Groomba{cfg: cfg, repo: repo}
+
+	today := time.Now()
+	fb, _ := g.FilterBranches(today)
+	t.Run("Only stale branches should be detected", func(t *testing.T) {
+		a := assert.New(t)
+		a.Equal(2, len(fb))
+		actual := fb[0].Name().Short()
+		a.Equal("origin/IsStale", actual)
+	})
+
+	//upstream, _ := git.PlainOpen("testdata/src")
+
+	t.Run("MoveBranch should fail when clobber disabled", func(t *testing.T) {
+		a := assert.New(t)
+		err := g.MoveBranch("IsStale")
+		a.NotNil(err)
+	})
+
+	os.Setenv("GROOMBA_CLOBBER", "true")
+	cfgC, _ := GetConfig(".")
+	gc := Groomba{cfg: cfgC, repo: repo}
+	t.Run("MoveBranch should succeed when clobber enabled", func(t *testing.T) {
+		a := assert.New(t)
+		err := gc.MoveBranch("IsStale")
+		a.Nil(err)
 	})
 }
