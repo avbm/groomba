@@ -359,6 +359,15 @@ func TestGroombaClobber(t *testing.T) {
 		a := assert.New(t)
 		err := g.MoveBranch("IsStale")
 		a.NotNil(err)
+		expectedErrMsg := "branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale"
+		a.Equal(expectedErrMsg, err.Error())
+	})
+
+	t.Run("MoveStaleBranches should continue with failures when clobber disabled", func(t *testing.T) {
+		a := assert.New(t)
+		err := g.MoveStaleBranches(fb)
+		expectedErrMsg := "branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale"
+		a.Equal(expectedErrMsg, err.Error())
 	})
 
 	os.Setenv("GROOMBA_CLOBBER", "true")
