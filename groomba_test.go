@@ -306,10 +306,12 @@ func InitClobberTest() {
 		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
 		[]string{staleDate, "checkout -b stale/IsStale"},  // create branch to clobber
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		[]string{staleDate, "checkout -b stale/IsStale3"},  // create second branch to clobber
 		[]string{staleDate, "checkout master"},
 		[]string{staleDate, "checkout -b IsStale"},
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit2 --date \"%v\"", staleDate)},
 		[]string{staleDate, "checkout -b IsStale2"},
+		[]string{staleDate, "checkout -b IsStale3"},
 		[]string{freshDate, "checkout -b IsFresh"},
 		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
 		[]string{freshDate, "checkout -b IsFresh2"},
@@ -348,7 +350,7 @@ func TestGroombaClobber(t *testing.T) {
 	fb, _ := g.FilterBranches(today)
 	t.Run("Only stale branches should be detected", func(t *testing.T) {
 		a := assert.New(t)
-		a.Equal(2, len(fb))
+		a.Equal(3, len(fb))
 		actual := fb[0].Name().Short()
 		a.Equal("origin/IsStale", actual)
 	})
@@ -359,6 +361,16 @@ func TestGroombaClobber(t *testing.T) {
 		a := assert.New(t)
 		err := g.MoveBranch("IsStale")
 		a.NotNil(err)
+		expectedErrMsg := "branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale"
+		a.Equal(expectedErrMsg, err.Error())
+	})
+
+	t.Run("MoveStaleBranches should continue with failures when clobber disabled", func(t *testing.T) {
+		a := assert.New(t)
+		err := g.MoveStaleBranches(fb)
+		expectedErrMsg := []string{"branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale",
+							"branch: IsStale3 failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale3"}
+		a.Equal(strings.Join(expectedErrMsg, "\n"), err.Error())
 	})
 
 	os.Setenv("GROOMBA_CLOBBER", "true")

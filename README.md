@@ -153,6 +153,7 @@ List of enhancements for Groomba in no particular order:
 - A good logo: every open source tool needs a good logo ;)
 - Passing command line flags and arguments: currently I am planning on adding support for arguments and flags using [Cobra](https://github.com/spf13/cobra)
 - Delete (really) old branches: delete branches older than a set threshold instead of renaming them
+- Add tests for failing to delete reference at remote
 
 ## Bugs and feature requests
 

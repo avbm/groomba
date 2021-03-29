@@ -1,7 +1,7 @@
 package groomba
 
 /*
-   Copyright 2020 Amod Mulay
+   Copyright 2021 Amod Mulay
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -126,7 +126,7 @@ func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) erro
 	return nil
 }
 
-func (g Groomba) MoveBranch(refName string) error {
+func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 	newRefName := g.cfg.Prefix + refName
 	if g.cfg.DryRun {
 		fmt.Printf("INFO: Would have moved branch %s to %s -- skipping since dry_run=true\n", refName, newRefName)
@@ -139,34 +139,36 @@ func (g Groomba) MoveBranch(refName string) error {
 		RefSpecs:   []config.RefSpec{renameSpec},
 		Force:      g.cfg.Clobber,
 	})
-
-	if err != nil {
-		if err != git.NoErrAlreadyUpToDate {
-			return err
-		}
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return &MoveBranchError{branch: refName, operation: CopyBranch, err: err}
 	}
+
 	fmt.Printf("INFO:   delete %s\n", refName)
 	deleteSpec := config.RefSpec(fmt.Sprintf(":refs/heads/%s", refName))
 	err = g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{deleteSpec},
 	})
-	if err != nil {
-		if err != git.NoErrAlreadyUpToDate {
-			return err
-		}
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return &MoveBranchError{branch: refName, operation: DeleteBranch, err: err}
 	}
+
 	return nil
 }
 
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
+	errList := []MoveBranchError{}
 	for _, ref := range branches {
 		fmt.Printf("INFO: Moving branch %s\n", ref.Name().Short())
 		refName := ref.Name().Short()[7:]
 		err := g.MoveBranch(refName)
 		if err != nil {
-			return err
+			errList = append(errList, *err)
 		}
 	}
+	if len(errList) != 0 {
+		return &MoveStaleBranchesError{errList: errList}
+	}
+
 	return nil
 }
