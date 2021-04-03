@@ -19,6 +19,7 @@ package groomba
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -157,14 +158,32 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 	errList := []MoveBranchError{}
+	var wg sync.WaitGroup
+	errCh := make(chan *MoveBranchError)
 	for _, ref := range branches {
-		log.Infof("Moving branch %s", ref.Name().Short())
-		refName := ref.Name().Short()[7:]
-		err := g.MoveBranch(refName)
-		if err != nil {
-			errList = append(errList, *err)
-		}
+		wg.Add(1)
+		go func (ref *plumbing.Reference, errCh chan *MoveBranchError) {
+			defer wg.Done()
+			log.Infof("Moving branch %s", ref.Name().Short())
+			refName := ref.Name().Short()[7:]
+			err := g.MoveBranch(refName)
+			if err != nil {
+				// errList = append(errList, *err)
+				errCh <- err
+			}
+		}(ref, errCh)
 	}
+
+	fmt.Println("Here 1")
+	wg.Wait()
+	fmt.Println("Here 2")
+	close(errCh)
+	fmt.Println("Here 3")
+	for e := range errCh {
+		errList = append(errList, *e)
+	}
+	fmt.Println("Here 4")
+
 	if len(errList) != 0 {
 		return &MoveStaleBranchesError{errList: errList}
 	}
