@@ -62,4 +62,3 @@ func (m *MoveStaleBranchesError) Error() string {
 	}
 	return strings.Join(msgList, "\n")
 }
-

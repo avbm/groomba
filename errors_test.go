@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestMoveBranchError(t *testing.T) {
 	t.Run("MoveBranchError should return expected error output copy operation", func(t *testing.T) {
 		a := assert.New(t)
@@ -36,8 +35,8 @@ func TestMoveStaleBranchesError(t *testing.T) {
 	errList = append(errList, MoveBranchError{branch: "errBranch3", err: fmt.Errorf("some more errors for errBranch3")})
 
 	expectedErrMsg := "branch: errBranch1 failed on operation copy with error: some error for errBranch1\n" +
-						"branch: errBranch2 failed on operation delete with error: some other error for errBranch2\n" +
-						"branch: errBranch3 failed on operation copy with error: some more errors for errBranch3"
+		"branch: errBranch2 failed on operation delete with error: some other error for errBranch2\n" +
+		"branch: errBranch3 failed on operation copy with error: some more errors for errBranch3"
 
 	m := MoveStaleBranchesError{errList: errList}
 	t.Run("MoveStaleBranchesError should return the expected joined output", func(t *testing.T) {
@@ -45,4 +44,3 @@ func TestMoveStaleBranchesError(t *testing.T) {
 		a.Equal(expectedErrMsg, m.Error())
 	})
 }
-
