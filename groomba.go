@@ -164,6 +164,7 @@ func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 	for _, ref := range branches {
 		wg.Add(1)
 		go func(ref *plumbing.Reference, errCh chan *MoveBranchError) {
+			defer wg.Done()
 			log.Infof("Moving branch %s", ref.Name().Short())
 			refName := ref.Name().Short()[7:]
 			err := g.MoveBranch(refName)
@@ -172,8 +173,6 @@ func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 				// errList = append(errList, *err)
 				errCh <- err
 			}
-			wg.Done()
-			return
 		}(ref, errCh)
 	}
 
