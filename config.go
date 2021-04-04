@@ -19,6 +19,7 @@ package groomba
 import (
 	"fmt"
 
+	"github.com/apex/log"
 	"github.com/spf13/viper"
 )
 
@@ -65,7 +66,7 @@ func GetConfig(configPath string) (*Config, error) {
 		}
 	}
 
-	// fmt.Printf("DEBUG: %v\n", viper.AllSettings())
+	log.Debugf("%v", viper.AllSettings())
 	var cfg Config
 	err = viper.Unmarshal(&cfg)
 	if err != nil {

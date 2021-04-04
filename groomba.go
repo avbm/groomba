@@ -18,7 +18,6 @@ package groomba
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 
+	"github.com/apex/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -41,8 +41,7 @@ func CheckIfError(err error, prefix ...string) {
 		return
 	}
 
-	fmt.Printf("\x1b[31;1m%s\x1b[0m\n", fmt.Sprintf("ERROR: %s %s", prefix, err))
-	os.Exit(1)
+	log.Fatalf("%s %s", prefix, err)
 }
 
 func NewGroomba(config *Config, repo *git.Repository) Groomba {
@@ -77,12 +76,12 @@ func (g Groomba) FilterBranches(referenceDate time.Time) ([]*plumbing.Reference,
 
 			commit, err := g.repo.CommitObject(ref.Hash())
 			if err != nil {
-				fmt.Printf("WARN: failed to read reference: %s, err: %s\n", ref, err)
+				log.Warnf("failed to read reference: %s, err: %s", ref, err)
 			}
 
 			t, err := time.ParseDuration(fmt.Sprintf("%dh", g.cfg.StaleAgeThreshold*24))
 			if err != nil {
-				fmt.Printf("WARN: failed to calculate age for ref: %s, err: %s\n", ref, err)
+				log.Warnf("failed to calculate age for ref: %s, err: %s", ref, err)
 			}
 			if referenceDate.Sub(commit.Committer.When) > t {
 				filteredBranches = append(filteredBranches, ref)
@@ -129,10 +128,10 @@ func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) erro
 func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 	newRefName := g.cfg.Prefix + refName
 	if g.cfg.DryRun {
-		fmt.Printf("INFO: Would have moved branch %s to %s -- skipping since dry_run=true\n", refName, newRefName)
+		log.Infof("Would have moved branch %s to %s -- skipping since dry_run=true", refName, newRefName)
 		return nil
 	}
-	fmt.Printf("INFO:   copy %s to %s\n", refName, newRefName)
+	log.Infof("  copy %s to %s", refName, newRefName)
 	renameSpec := config.RefSpec(fmt.Sprintf("refs/remotes/origin/%s:refs/heads/%s", refName, newRefName))
 	err := g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
@@ -143,7 +142,7 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 		return &MoveBranchError{branch: refName, operation: CopyBranch, err: err}
 	}
 
-	fmt.Printf("INFO:   delete %s\n", refName)
+	log.Infof("  delete %s\n", refName)
 	deleteSpec := config.RefSpec(fmt.Sprintf(":refs/heads/%s", refName))
 	err = g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
@@ -159,7 +158,7 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 	errList := []MoveBranchError{}
 	for _, ref := range branches {
-		fmt.Printf("INFO: Moving branch %s\n", ref.Name().Short())
+		log.Infof("Moving branch %s", ref.Name().Short())
 		refName := ref.Name().Short()[7:]
 		err := g.MoveBranch(refName)
 		if err != nil {

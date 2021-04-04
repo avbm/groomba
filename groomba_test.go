@@ -39,7 +39,7 @@ func InitTest() {
 		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
 		[]string{staleDate, "checkout -b IsStale"},
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
-		[]string{staleDate, "checkout -b stale/IsStale1"},  // Ensure "already up-to-date" is not returned as error
+		[]string{staleDate, "checkout -b stale/IsStale1"}, // Ensure "already up-to-date" is not returned as error
 		[]string{staleDate, "checkout -b IsStale2"},
 		[]string{freshDate, "checkout -b IsFresh"},
 		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
@@ -236,7 +236,7 @@ func TestGroombaPrefix(t *testing.T) {
 	t.Run("Only stale branches should be detected", func(t *testing.T) {
 		a := assert.New(t)
 
-		a.Equal(3, len(fb))  // Expected count is 3 here unlike 2 above since stale/IsStale is also detected here
+		a.Equal(3, len(fb)) // Expected count is 3 here unlike 2 above since stale/IsStale is also detected here
 		actual := fb[0].Name().Short()
 		a.Equal("origin/IsStale", actual)
 	})
@@ -304,9 +304,9 @@ func InitClobberTest() {
 		[]string{zeroDate, "config user.email 'test@user.com'"},
 		[]string{zeroDate, "config user.name 'Test User'"},
 		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
-		[]string{staleDate, "checkout -b stale/IsStale"},  // create branch to clobber
+		[]string{staleDate, "checkout -b stale/IsStale"}, // create branch to clobber
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
-		[]string{staleDate, "checkout -b stale/IsStale3"},  // create second branch to clobber
+		[]string{staleDate, "checkout -b stale/IsStale3"}, // create second branch to clobber
 		[]string{staleDate, "checkout master"},
 		[]string{staleDate, "checkout -b IsStale"},
 		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit2 --date \"%v\"", staleDate)},
@@ -369,7 +369,7 @@ func TestGroombaClobber(t *testing.T) {
 		a := assert.New(t)
 		err := g.MoveStaleBranches(fb)
 		expectedErrMsg := []string{"branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale",
-							"branch: IsStale3 failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale3"}
+			"branch: IsStale3 failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale3"}
 		a.Equal(strings.Join(expectedErrMsg, "\n"), err.Error())
 	})
 
