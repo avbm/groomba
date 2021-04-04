@@ -143,7 +143,7 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 		return &MoveBranchError{branch: refName, operation: CopyBranch, err: err}
 	}
 
-	log.Infof("  delete %s\n", refName)
+	log.Infof("  delete %s", refName)
 	deleteSpec := config.RefSpec(fmt.Sprintf(":refs/heads/%s", refName))
 	err = g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
@@ -159,30 +159,30 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 	errList := []MoveBranchError{}
 	var wg sync.WaitGroup
-	errCh := make(chan *MoveBranchError)
+	errCh := make(chan *MoveBranchError, len(branches))
+
 	for _, ref := range branches {
 		wg.Add(1)
-		go func (ref *plumbing.Reference, errCh chan *MoveBranchError) {
-			defer wg.Done()
+		go func(ref *plumbing.Reference, errCh chan *MoveBranchError) {
 			log.Infof("Moving branch %s", ref.Name().Short())
 			refName := ref.Name().Short()[7:]
 			err := g.MoveBranch(refName)
+			log.Debugf("branch: %s, returned error: %s", refName, err)
 			if err != nil {
 				// errList = append(errList, *err)
 				errCh <- err
 			}
+			wg.Done()
+			return
 		}(ref, errCh)
 	}
 
-	fmt.Println("Here 1")
 	wg.Wait()
-	fmt.Println("Here 2")
 	close(errCh)
-	fmt.Println("Here 3")
 	for e := range errCh {
+		log.Debugf("%s", e)
 		errList = append(errList, *e)
 	}
-	fmt.Println("Here 4")
 
 	if len(errList) != 0 {
 		return &MoveStaleBranchesError{errList: errList}

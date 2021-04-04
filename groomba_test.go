@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -370,6 +371,7 @@ func TestGroombaClobber(t *testing.T) {
 		err := g.MoveStaleBranches(fb)
 		expectedErrMsg := []string{"branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale",
 			"branch: IsStale3 failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale3"}
+		sort.Strings(expectedErrMsg)
 		a.Equal(strings.Join(expectedErrMsg, "\n"), err.Error())
 	})
 
