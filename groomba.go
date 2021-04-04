@@ -170,7 +170,6 @@ func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 			err := g.MoveBranch(refName)
 			log.Debugf("branch: %s, returned error: %s", refName, err)
 			if err != nil {
-				// errList = append(errList, *err)
 				errCh <- err
 			}
 		}(ref, errCh)
