@@ -18,6 +18,7 @@ package groomba
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -60,5 +61,6 @@ func (m *MoveStaleBranchesError) Error() string {
 	for _, err := range m.errList {
 		msgList = append(msgList, err.Error())
 	}
+	sort.Strings(msgList)
 	return strings.Join(msgList, "\n")
 }
