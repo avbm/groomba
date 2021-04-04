@@ -34,22 +34,22 @@ func InitTest() {
 	staleDate := today.AddDate(0, 0, -19).Format(time.RFC3339)
 	freshDate := today.AddDate(0, 0, -5).Format(time.RFC3339)
 	gitCommands := [][]string{
-		[]string{zeroDate, "init"},
-		[]string{zeroDate, "config user.email 'test@user.com'"},
-		[]string{zeroDate, "config user.name 'Test User'"},
-		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
-		[]string{staleDate, "checkout -b IsStale"},
-		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
-		[]string{staleDate, "checkout -b stale/IsStale1"}, // Ensure "already up-to-date" is not returned as error
-		[]string{staleDate, "checkout -b IsStale2"},
-		[]string{freshDate, "checkout -b IsFresh"},
-		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
-		[]string{freshDate, "checkout -b IsFresh2"},
-		[]string{nowDate, "checkout IsStale"},
-		[]string{nowDate, "checkout -b StaleCommitFreshCommitter"},
-		[]string{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
-		[]string{nowDate, "rebase HEAD~1"},
-		[]string{nowDate, "checkout master"},
+		{zeroDate, "init"},
+		{zeroDate, "config user.email 'test@user.com'"},
+		{zeroDate, "config user.name 'Test User'"},
+		{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
+		{staleDate, "checkout -b IsStale"},
+		{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		{staleDate, "checkout -b stale/IsStale1"}, // Ensure "already up-to-date" is not returned as error
+		{staleDate, "checkout -b IsStale2"},
+		{freshDate, "checkout -b IsFresh"},
+		{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
+		{freshDate, "checkout -b IsFresh2"},
+		{nowDate, "checkout IsStale"},
+		{nowDate, "checkout -b StaleCommitFreshCommitter"},
+		{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
+		{nowDate, "rebase HEAD~1"},
+		{nowDate, "checkout master"},
 	}
 	for _, value := range gitCommands {
 		committerDate, args := value[0], value[1]
@@ -301,26 +301,26 @@ func InitClobberTest() {
 	staleDate := today.AddDate(0, 0, -19).Format(time.RFC3339)
 	freshDate := today.AddDate(0, 0, -5).Format(time.RFC3339)
 	gitCommands := [][]string{
-		[]string{zeroDate, "init"},
-		[]string{zeroDate, "config user.email 'test@user.com'"},
-		[]string{zeroDate, "config user.name 'Test User'"},
-		[]string{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
-		[]string{staleDate, "checkout -b stale/IsStale"}, // create branch to clobber
-		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
-		[]string{staleDate, "checkout -b stale/IsStale3"}, // create second branch to clobber
-		[]string{staleDate, "checkout master"},
-		[]string{staleDate, "checkout -b IsStale"},
-		[]string{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit2 --date \"%v\"", staleDate)},
-		[]string{staleDate, "checkout -b IsStale2"},
-		[]string{staleDate, "checkout -b IsStale3"},
-		[]string{freshDate, "checkout -b IsFresh"},
-		[]string{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
-		[]string{freshDate, "checkout -b IsFresh2"},
-		[]string{nowDate, "checkout IsStale"},
-		[]string{nowDate, "checkout -b StaleCommitFreshCommitter"},
-		[]string{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
-		[]string{nowDate, "rebase HEAD~1"},
-		[]string{nowDate, "checkout master"},
+		{zeroDate, "init"},
+		{zeroDate, "config user.email 'test@user.com'"},
+		{zeroDate, "config user.name 'Test User'"},
+		{zeroDate, fmt.Sprintf("commit --allow-empty -am Initial_commit --date \"%v\"", zeroDate)},
+		{staleDate, "checkout -b stale/IsStale"}, // create branch to clobber
+		{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit --date \"%v\"", staleDate)},
+		{staleDate, "checkout -b stale/IsStale3"}, // create second branch to clobber
+		{staleDate, "checkout master"},
+		{staleDate, "checkout -b IsStale"},
+		{staleDate, fmt.Sprintf("commit --allow-empty -am Stale_commit2 --date \"%v\"", staleDate)},
+		{staleDate, "checkout -b IsStale2"},
+		{staleDate, "checkout -b IsStale3"},
+		{freshDate, "checkout -b IsFresh"},
+		{freshDate, fmt.Sprintf("commit --allow-empty -am Fresh_commit --date \"%v\"", freshDate)},
+		{freshDate, "checkout -b IsFresh2"},
+		{nowDate, "checkout IsStale"},
+		{nowDate, "checkout -b StaleCommitFreshCommitter"},
+		{nowDate, "commit --allow-empty -am Stale_commit_2 --date 2020-01-02"},
+		{nowDate, "rebase HEAD~1"},
+		{nowDate, "checkout master"},
 	}
 	for _, value := range gitCommands {
 		committerDate, args := value[0], value[1]
