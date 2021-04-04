@@ -22,10 +22,13 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/cli"
 	"github.com/avbm/groomba"
 )
 
 func main() {
+	log.SetHandler(cli.Default)
 	cfg, err := groomba.GetConfig(".")
 	groomba.CheckIfError(err)
 

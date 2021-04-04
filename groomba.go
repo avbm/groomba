@@ -22,11 +22,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/apex/log"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 
-	"github.com/apex/log"
 	"gopkg.in/yaml.v3"
 )
 
