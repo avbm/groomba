@@ -130,7 +130,10 @@ func TestGroomba(t *testing.T) {
 	t.Run("stale branch should be removed from origin", func(t *testing.T) {
 		a := assert.New(t)
 		_, err := upstream.Reference("refs/heads/IsStale", false)
-		a.Equal("reference not found", err.Error())
+		a.NotNil(err)
+		if err != nil {
+			a.Equal("reference not found", err.Error())
+		}
 	})
 
 	t.Run("stale branch should be renamed at origin", func(t *testing.T) {
@@ -203,7 +206,10 @@ func TestGroombaDryRun(t *testing.T) {
 	t.Run("stale branch should not be renamed at origin in dry_run mode", func(t *testing.T) {
 		a := assert.New(t)
 		_, err := upstream.Reference("refs/heads/stale/IsStale", false)
-		a.Equal("reference not found", err.Error())
+		a.NotNil(err)
+		if err != nil {
+			a.Equal("reference not found", err.Error())
+		}
 	})
 
 	t.Run("origin should have exactly 7 branches", func(t *testing.T) {
@@ -265,7 +271,10 @@ func TestGroombaPrefix(t *testing.T) {
 	t.Run("stale branch should be removed from origin", func(t *testing.T) {
 		a := assert.New(t)
 		_, err := upstream.Reference("refs/heads/IsStale", false)
-		a.Equal("reference not found", err.Error())
+		a.NotNil(err)
+		if err != nil {
+			a.Equal("reference not found", err.Error())
+		}
 	})
 
 	t.Run("stale branch should be renamed at origin with correct prefix", func(t *testing.T) {
@@ -361,9 +370,11 @@ func TestGroombaClobber(t *testing.T) {
 	t.Run("MoveBranch should fail when clobber disabled", func(t *testing.T) {
 		a := assert.New(t)
 		err := g.MoveBranch("IsStale")
-		a.NotNil(err)
 		expectedErrMsg := "branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale"
-		a.Equal(expectedErrMsg, err.Error())
+		a.NotNil(err)
+		if err != nil {
+			a.Equal(expectedErrMsg, err.Error())
+		}
 	})
 
 	t.Run("MoveStaleBranches should continue with failures when clobber disabled", func(t *testing.T) {
@@ -372,7 +383,10 @@ func TestGroombaClobber(t *testing.T) {
 		expectedErrMsg := []string{"branch: IsStale failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale",
 			"branch: IsStale3 failed on operation copy with error: non-fast-forward update: refs/heads/stale/IsStale3"}
 		sort.Strings(expectedErrMsg)
-		a.Equal(strings.Join(expectedErrMsg, "\n"), err.Error())
+		a.NotNil(err)
+		if err != nil {
+			a.Equal(strings.Join(expectedErrMsg, "\n"), err.Error())
+		}
 	})
 
 	os.Setenv("GROOMBA_CLOBBER", "true")

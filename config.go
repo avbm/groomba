@@ -27,6 +27,7 @@ import (
 type Config struct {
 	Clobber           bool     `yaml:"clobber" toml:"clobber"`
 	DryRun            bool     `yaml:"dry_run" toml:"dry_run"`
+	MaxConcurrency    uint8    `yaml:"max_concurrency" toml:"max_concurrency"`
 	Prefix            string   `yaml:"prefix" toml:"prefix"`
 	StaleAgeThreshold int      `yaml:"stale_age_threshold" toml:"stale_age_threshold"`
 	StaticBranches    []string `yaml:"static_branches" toml:"static_branches"`
@@ -42,12 +43,17 @@ func GetConfig(configPath string) (*Config, error) {
 	viper.SetDefault("static_branches", []string{"main", "master", "production"})
 	viper.RegisterAlias("StaticBranches", "static_branches")
 	viper.SetDefault("prefix", "stale/")
+	viper.SetDefault("max_concurrency", 4)
+	viper.RegisterAlias("MaxConcurrency", "max_concurrency")
 
 	if err := viper.BindEnv("clobber", "GROOMBA_CLOBBER"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env clobber: %s", err)
 	}
 	if err := viper.BindEnv("dry_run", "GROOMBA_DRY_RUN"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env dry_run: %s", err)
+	}
+	if err := viper.BindEnv("max_concurrency", "GROOMBA_MAX_CONCURRENCY"); err != nil {
+		return nil, fmt.Errorf("getConfig: failed to bind env max_concurrency: %s", err)
 	}
 	if err := viper.BindEnv("prefix", "GROOMBA_PREFIX"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env prefix: %s", err)
@@ -71,6 +77,11 @@ func GetConfig(configPath string) (*Config, error) {
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
 		return nil, fmt.Errorf("getConfig: failed to unmarshal config: %s", err)
+	}
+
+	// if max_concurrency is set to 0 then override to 1
+	if cfg.MaxConcurrency == 0 {
+		cfg.MaxConcurrency = 1
 	}
 
 	return &cfg, nil

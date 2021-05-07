@@ -140,6 +140,7 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 		Force:      g.cfg.Clobber,
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
+		log.Infof("  Failed to copy %s to %s with error: %s", refName, newRefName, err)
 		return &MoveBranchError{branch: refName, operation: CopyBranch, err: err}
 	}
 
@@ -150,6 +151,7 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 		RefSpecs:   []config.RefSpec{deleteSpec},
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
+		log.Infof("  Failed to delete %s", refName, err)
 		return &MoveBranchError{branch: refName, operation: DeleteBranch, err: err}
 	}
 
@@ -157,31 +159,57 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 }
 
 func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
-	errList := []MoveBranchError{}
 	var wg sync.WaitGroup
-	errCh := make(chan *MoveBranchError, len(branches))
+	errCh := make(chan *MoveBranchError) //, len(branches))
+	ch := make(chan string)
 
+	branchNames := []string{}
 	for _, ref := range branches {
 		wg.Add(1)
-		go func(ref *plumbing.Reference, errCh chan *MoveBranchError) {
-			defer wg.Done()
-			log.Infof("Moving branch %s", ref.Name().Short())
-			refName := ref.Name().Short()[7:]
-			err := g.MoveBranch(refName)
-			log.Debugf("branch: %s, returned error: %s", refName, err)
-			if err != nil {
-				errCh <- err
-			}
-		}(ref, errCh)
+		log.Debugf("ref: %s", ref.Name())
+		branchNames = append(branchNames, ref.Name().Short()[7:])
+		log.Debugf("branchNames: %s", branchNames)
 	}
+	log.Debugf("%s", branchNames)
+	go func(branchNames []string) {
+		// send branches to move to ch
+		for _, ref := range branchNames {
+			log.Debugf("sending ref: %s", ref)
+			ch <- ref
+		}
+		close(ch)
+	}(branchNames)
+	for i := uint8(0); i < g.cfg.MaxConcurrency; i++ {
+		// Create workers to move branches
+		go func(ch <-chan string) {
+			for refName := range ch {
+				defer wg.Done()
+				log.Infof("Moving branch %s", refName)
+				err := g.MoveBranch(refName)
+				log.Debugf("branch: %s, returned error: %s", refName, err)
+				if err != nil {
+					errCh <- err
+				}
+			}
+		}(ch)
+	}
+
+	// channel to get aggregated list of errors
+	errListCh := make(chan []MoveBranchError)
+	defer close(errListCh)
+	go func(errorListCh chan<- []MoveBranchError) {
+		errList := []MoveBranchError{}
+		for e := range errCh {
+			log.Debugf("%s", e)
+			errList = append(errList, *e)
+		}
+		errListCh <- errList
+	}(errListCh)
 
 	wg.Wait()
 	close(errCh)
-	for e := range errCh {
-		log.Debugf("%s", e)
-		errList = append(errList, *e)
-	}
 
+	errList := <-errListCh
 	if len(errList) != 0 {
 		return &MoveStaleBranchesError{errList: errList}
 	}
