@@ -43,6 +43,7 @@ To configure Groomba, you can set each configuration option in a `.groomba.toml`
 |------|------|---------|-------------|
 | Clobber           | bool | `false` | Toggle to enable or disable clobber mode |
 | DryRun            | bool | `false` | Toggle to enable or disable dry run mode |
+| MaxConcurrency    | uint8 | `4` | Set the maximum number of concurrent workers, set to 0 or 1 to disable concurrency |
 | Prefix            | string | `stale/` | Identifier that will be added to the beginning of stale branch names to mark them as stale |
 | StaleAgeThreshold | int | `14` | Threshold age in days for considering a branch as stale |
 | StaticBranches    | []string | `["master", "main"]` | List of branches that are considered as `static` or `protected` and will be ignored |
@@ -86,6 +87,26 @@ GROOMBA_DRY_RUN="true"
 ```
 
 Note: Any truthy value will enable: `true`, `True`, `1` or any falsy value will disable: `false`, `False`, `0`
+
+### MaxConcurrency
+
+`MaxConcurrency` is a unit8 value that tells Groomba the number of worker processes to start. Each worker concurrently handles moving 1 branch.
+
+Default: `4`
+
+To set to a different value, say `10`:
+```
+# in .groomba.toml
+max_concurrency = 10
+
+# or in .groomba.yaml
+max_concurrency: 10
+
+# or as an environment variable
+GROOMBA_DRY_RUN=10
+```
+
+Note: Since `MaxConcurrency` is a unit8 it can only be set to values from [0 ,255] inclusive. Setting the value to either 0 or 1 ensures only 1 worker is used ie only one branch is moved at a time.
 
 ### Prefix
 
