@@ -23,7 +23,7 @@ jobs:
 
     - name: Lint
       run: |
-        go get -u golang.org/x/lint/golint
+        go install golang.org/x/lint/golint
         golint ./...
 
     - name: Format
