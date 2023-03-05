@@ -21,10 +21,27 @@ func TestNewAuth(t *testing.T) {
 	})
 
 	t.Run("ssh-agent auth", func(t *testing.T) {
+		// First test that we return error when trying to use ssh-agent auth with no agent running
+		sockVar := "SSH_AUTH_SOCK"
+		pidVar := "SSH_AGENT_PID"
+		if agentSock := os.Getenv(sockVar); agentSock != "" {
+			defer os.Setenv(sockVar, agentSock)
+		}
+		if agentPID := os.Getenv(pidVar); agentPID != "" {
+			defer os.Setenv(pidVar, agentPID)
+		}
+		os.Unsetenv(sockVar)
+		os.Unsetenv(pidVar)
+		a, err := NewAuth(SSHAgentAuth)
+		assert.EqualError(t, err, `error creating SSH agent: "SSH agent requested but SSH_AUTH_SOCK not-specified"`)
+		_, ok := a.auth.(*ssh.PublicKeysCallback)
+		assert.True(t, ok, "expected returned auth type to be of ssh-agent type")
+
+		// Setup the ssh-agent
 		stdout := &bytes.Buffer{}
 		cmd := exec.Command("ssh-agent", "-s")
 		cmd.Stdout = stdout
-		err := cmd.Run()
+		err = cmd.Run()
 		assert.Nil(t, err, "failed to setup ssh-agent for test")
 		for _, s := range strings.Split(stdout.String(), ";") {
 			if strings.Contains(s, "=") {
@@ -33,9 +50,10 @@ func TestNewAuth(t *testing.T) {
 			}
 		}
 
-		a, err := NewAuth(SSHAgentAuth)
+		// Ensure ssh-agent authenticator initialization works with ssh-agent running
+		a, err = NewAuth(SSHAgentAuth)
 		assert.Nil(t, err)
-		_, ok := a.auth.(*ssh.PublicKeysCallback)
+		_, ok = a.auth.(*ssh.PublicKeysCallback)
 		assert.True(t, ok, "expected returned auth type to be of ssh-agent type")
 
 	})
