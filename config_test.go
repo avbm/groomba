@@ -26,7 +26,7 @@ func TestConfig(t *testing.T) {
 		a.Equal([]string{"main", "master", "production"}, cfg.StaticBranches)
 	})
 
-	cfg, err = GetConfig("testdata")
+	cfg, err = GetConfig("testdata/ssh-agent")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
