@@ -1,7 +1,8 @@
 # Groomba
 
 [![GitHub Workflow Status](https://github.com/avbm/groomba/actions/workflows/ci.yml/badge.svg?style=flat)](https://github.com/avbm/groomba/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go%20version-%3E=1.16-61CFDD.svg?style=flat)](https://golang.org/doc/devel/release.html)
+[![Go Version](https://img.shields.io/badge/go%20version-%3E=1.20-61CFDD.svg?style=flat)](https://golang.org/doc/devel/release.html)
+[![go report](https://goreportcard.com/badge/github.com/avbm/groomba)](https://goreportcard.com/report/github.com/avbm/groomba)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/avbm/groomba?style=flat)](https://pkg.go.dev/mod/github.com/avbm/groomba)
 
 Groomba is a simple utility written in [Go](https://golang.org/) to groom your git repositories. It will rename branches older than a defined age. Unlike other tools like the [Stale Github Action](https://github.com/actions/stale), Groomba only depends on the git APIs and is agnostic of the software used to host your git repository. It will work just as well whether your repos are hosted in Github, Gitlab, Btbucket or something else.
@@ -15,7 +16,7 @@ curl -sL https://git.io/groomba | bash
 
 Download and run specific version, ex v0.2.10:
 ```
-curl -sL https://git.io/groomba | VERSION=v0.2.10 bash
+curl -sL https://git.io/groomba | VERSION=v0.3.19 bash
 ```
 
 You can add the snippet above as a step in your CI pipeline on your main branch to periodically groom your repository.
@@ -41,7 +42,7 @@ To configure Groomba, you can set each configuration option in a `.groomba.toml`
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
-| Auth              | string | "default" | Type of authentication to use, valid values:("default", "ssh-agent") |
+| Auth              | string | `default` | Type of authentication to use, valid values:("default", "ssh-agent") |
 | Clobber           | bool | `false` | Toggle to enable or disable clobber mode |
 | DryRun            | bool | `false` | Toggle to enable or disable dry run mode |
 | MaxConcurrency    | uint8 | `4` | Set the maximum number of concurrent workers, set to 0 or 1 to disable concurrency |
@@ -51,7 +52,7 @@ To configure Groomba, you can set each configuration option in a `.groomba.toml`
 
 ### Auth
 
-`Auth` is a string that tells Groomba which authentication mechanism to use. Currently only 2 mechanisms are supported, `default` which uses the default credentials which were used to clone the repository and `ssh-agent` to use the keys available in a local ssh-agent session.
+`Auth` is a string that tells Groomba which authentication mechanism to use. Currently only 2 mechanisms are supported, `default` which uses the default credentials which were used to clone the repository and `ssh-agent` to use the keys available in a local [ssh-agent](https://linux.die.net/man/1/ssh-agent) session.
 
 Default: `default`
 
