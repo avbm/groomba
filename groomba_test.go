@@ -2,6 +2,7 @@ package groomba
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"sort"
@@ -34,8 +35,15 @@ func InitTest() {
 	os.RemoveAll("testdata/dst")
 
 	// create source repo
-	os.MkdirAll("testdata/src", 0755)
-	os.Chdir("testdata/src")
+	err := os.MkdirAll("testdata/src", 0755)
+	if err != nil {
+		log.Fatal("failed to setup for test")
+	}
+	err = os.Chdir("testdata/src")
+	if err != nil {
+		log.Fatal("failed to setup for test")
+	}
+
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	nowDate := today.Format(time.RFC3339)
@@ -69,10 +77,13 @@ func InitTest() {
 		err := cmd.Run()
 		CheckTestInitError(err, "git", args)
 	}
-	os.Chdir("../..")
+	err = os.Chdir("../..")
+	if err != nil {
+		log.Fatal("failed to setup for test")
+	}
 
 	// create cloned repo
-	err := exec.Command("git", "clone", "testdata/src", "testdata/dst").Run()
+	err = exec.Command("git", "clone", "testdata/src", "testdata/dst").Run()
 	CheckTestInitError(err)
 }
 
@@ -84,7 +95,7 @@ func ExampleGroomba_PrintBranchesGroupbyAuthor() {
 	g := Groomba{cfg: cfg, repo: repo, auth: &MockAuthenticator{}}
 
 	fb, _ := g.FilterBranches(time.Now())
-	g.PrintBranchesGroupbyAuthor(fb)
+	_ = g.PrintBranchesGroupbyAuthor(fb)
 	// Output:
 	// Test:
 	//     - name: refs/remotes/origin/IsStale
@@ -116,7 +127,9 @@ func TestGroomba(t *testing.T) {
 		a.Equal("origin/IsStale", actual)
 	})
 
-	g.MoveStaleBranches(fb)
+	err := g.MoveStaleBranches(fb)
+	assert.Nil(t, err)
+
 	upstream, _ := git.PlainOpen("testdata/src")
 	t.Run("main branch should not be removed from origin", func(t *testing.T) {
 		a := assert.New(t)
@@ -155,10 +168,11 @@ func TestGroomba(t *testing.T) {
 		a := assert.New(t)
 		count := 0
 		b, _ := upstream.Branches()
-		b.ForEach(func(ref *plumbing.Reference) error {
+		err := b.ForEach(func(ref *plumbing.Reference) error {
 			count++
 			return nil
 		})
+		a.Nil(err)
 		a.Equal(7, count)
 	})
 }
@@ -186,7 +200,9 @@ func TestGroombaDryRun(t *testing.T) {
 		a.Equal("origin/IsStale", actual)
 	})
 
-	g.MoveStaleBranches(fb)
+	err := g.MoveStaleBranches(fb)
+	assert.Nil(t, err)
+
 	upstream, _ := git.PlainOpen("testdata/src")
 	t.Run("main branch should not be removed from origin", func(t *testing.T) {
 		a := assert.New(t)
@@ -225,10 +241,11 @@ func TestGroombaDryRun(t *testing.T) {
 		a := assert.New(t)
 		count := 0
 		b, _ := upstream.Branches()
-		b.ForEach(func(ref *plumbing.Reference) error {
+		err := b.ForEach(func(ref *plumbing.Reference) error {
 			count++
 			return nil
 		})
+		a.Nil(err)
 		a.Equal(7, count)
 	})
 }
@@ -257,7 +274,9 @@ func TestGroombaPrefix(t *testing.T) {
 		a.Equal("origin/IsStale", actual)
 	})
 
-	g.MoveStaleBranches(fb)
+	err := g.MoveStaleBranches(fb)
+	assert.Nil(t, err)
+
 	upstream, _ := git.PlainOpen("testdata/src")
 	t.Run("main branch should not be removed from origin", func(t *testing.T) {
 		a := assert.New(t)
@@ -296,10 +315,11 @@ func TestGroombaPrefix(t *testing.T) {
 		a := assert.New(t)
 		count := 0
 		b, _ := upstream.Branches()
-		b.ForEach(func(ref *plumbing.Reference) error {
+		err = b.ForEach(func(ref *plumbing.Reference) error {
 			count++
 			return nil
 		})
+		a.Nil(err)
 		a.Equal(7, count)
 	})
 }
@@ -310,8 +330,14 @@ func InitClobberTest() {
 	os.RemoveAll("testdata/dst")
 
 	// create source repo
-	os.MkdirAll("testdata/src", 0755)
-	os.Chdir("testdata/src")
+	err := os.MkdirAll("testdata/src", 0755)
+	if err != nil {
+		log.Fatal("error setting up clobber test")
+	}
+	err = os.Chdir("testdata/src")
+	if err != nil {
+		log.Fatal("error setting up clobber test")
+	}
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	nowDate := today.Format(time.RFC3339)
@@ -349,10 +375,13 @@ func InitClobberTest() {
 		err := cmd.Run()
 		CheckTestInitError(err, "git", args)
 	}
-	os.Chdir("../..")
+	err = os.Chdir("../..")
+	if err != nil {
+		log.Fatal("error setting up clobber test")
+	}
 
 	// create cloned repo
-	err := exec.Command("git", "clone", "testdata/src", "testdata/dst").Run()
+	err = exec.Command("git", "clone", "testdata/src", "testdata/dst").Run()
 	CheckTestInitError(err)
 }
 

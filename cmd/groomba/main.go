@@ -31,28 +31,29 @@ import (
 func main() {
 	log.SetHandler(cli.Default)
 	cfg, err := groomba.GetConfig(".")
-	groomba.CheckIfError(err)
+	groomba.CheckIfError(err, "failed to get configs")
 
 	repo, _ := git.PlainOpen(".")
 
 	a, err := auth.NewAuth(cfg.Auth)
-	groomba.CheckIfError(err)
+	groomba.CheckIfError(err, "failed to initialize auth")
 
-	repo.Fetch(&git.FetchOptions{
+	err = repo.Fetch(&git.FetchOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
 		Depth:      1,
 		Auth:       a.Get(),
 	})
+	groomba.CheckIfError(err, "failed to fetch references from upstream")
 
 	g := groomba.NewGroomba(cfg, repo, a)
 
 	fb, err := g.FilterBranches(time.Now())
-	groomba.CheckIfError(err)
+	groomba.CheckIfError(err, "failed to filter stale branches")
 
 	err = g.PrintBranchesGroupbyAuthor(fb)
-	groomba.CheckIfError(err)
+	groomba.CheckIfError(err, "failed to print branches by author")
 
 	err = g.MoveStaleBranches(fb)
-	groomba.CheckIfError(err)
+	groomba.CheckIfError(err, "failed to move stale branches")
 }

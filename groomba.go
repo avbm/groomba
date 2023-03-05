@@ -39,12 +39,12 @@ type Groomba struct {
 }
 
 // CheckIfError should be used to naively panic if an error is not nil.
-func CheckIfError(err error, prefix ...string) {
+func CheckIfError(err error, message ...string) {
 	if err == nil {
 		return
 	}
 
-	log.Fatalf("%s %s", prefix, err)
+	log.Fatalf("%s %s", message, err)
 }
 
 type Authenticator interface {
@@ -75,7 +75,7 @@ func (g Groomba) FilterBranches(referenceDate time.Time) ([]*plumbing.Reference,
 	}
 
 	filteredBranches := []*plumbing.Reference{}
-	branchList.ForEach(func(ref *plumbing.Reference) error {
+	err = branchList.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Type() == plumbing.HashReference && ref.Name().IsRemote() &&
 			!g.IsStaticBranch(ref.Name().String()) &&
 			!strings.HasPrefix(ref.Name().String(), "refs/remotes/origin/revert") &&
@@ -97,7 +97,8 @@ func (g Groomba) FilterBranches(referenceDate time.Time) ([]*plumbing.Reference,
 		}
 		return nil
 	})
-	return filteredBranches, nil
+
+	return filteredBranches, err
 }
 
 func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) error {
@@ -116,7 +117,7 @@ func (g Groomba) PrintBranchesGroupbyAuthor(branches []*plumbing.Reference) erro
 			Name: ref.Name().String(),
 			Age:  fmt.Sprintf("%dd", int64(time.Since(commit.Committer.When).Hours()/24)),
 		}
-		if _, ok := authors[commit.Author.Name]; ok {
+		if len(authors[commit.Author.Name]) > 0 {
 			authors[commit.Author.Name] = append(authors[commit.Author.Name], b)
 		} else {
 			authors[commit.Author.Name] = []*Branch{b}
@@ -192,13 +193,13 @@ func (g Groomba) MoveStaleBranches(branches []*plumbing.Reference) error {
 		// Create workers to move branches
 		go func(ch <-chan string) {
 			for refName := range ch {
-				defer wg.Done()
 				log.Infof("Moving branch %s", refName)
 				err := g.MoveBranch(refName)
 				log.Debugf("branch: %s, returned error: %s", refName, err)
 				if err != nil {
 					errCh <- err
 				}
+				wg.Done()
 			}
 		}(ch)
 	}
