@@ -17,10 +17,14 @@ package main
 */
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
@@ -33,10 +37,23 @@ func main() {
 	groomba.CheckIfError(err)
 
 	repo, _ := git.PlainOpen(".")
+
+	var auth transport.AuthMethod
+	switch cfg.Auth {
+	case "ssh-agent":
+		auth, err = ssh.NewSSHAgentAuth("") // get username from environment
+		groomba.CheckIfError(err)
+	case "default":
+		auth = nil
+	default:
+		groomba.CheckIfError(errors.New(fmt.Sprintf("auth type %s not supported. valid values: ssh-agent, default", cfg.Auth)))
+	}
+
 	repo.Fetch(&git.FetchOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
 		Depth:      1,
+		Auth:       auth,
 	})
 
 	g := groomba.NewGroomba(cfg, repo)
