@@ -41,12 +41,31 @@ To configure Groomba, you can set each configuration option in a `.groomba.toml`
 
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
+| Auth              | string | "default" | Type of authentication to use, valid values:("default", "ssh-agent") |
 | Clobber           | bool | `false` | Toggle to enable or disable clobber mode |
 | DryRun            | bool | `false` | Toggle to enable or disable dry run mode |
 | MaxConcurrency    | uint8 | `4` | Set the maximum number of concurrent workers, set to 0 or 1 to disable concurrency |
 | Prefix            | string | `stale/` | Identifier that will be added to the beginning of stale branch names to mark them as stale |
 | StaleAgeThreshold | int | `14` | Threshold age in days for considering a branch as stale |
 | StaticBranches    | []string | `["master", "main"]` | List of branches that are considered as `static` or `protected` and will be ignored |
+
+### Auth
+
+`Auth` is a string that tells Groomba which authentication mechanism to use. Currently only 2 mechanisms are supported, `default` which uses the default credentials which were used to clone the repository and `ssh-agent` to use the keys available in a local ssh-agent session.
+
+Default: `default`
+
+To set to a different value, say `ssh-agent`:
+```
+# in .groomba.toml
+auth = "ssh-agent"
+
+# or in .groomba.yaml
+auth: "ssh-agent"
+
+# or as an environment variable
+GROOMBA_AUTH="ssh-agent"
+```
 
 ### Clobber
 
