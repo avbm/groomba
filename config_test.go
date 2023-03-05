@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/avbm/groomba/auth"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,6 +17,7 @@ func TestConfig(t *testing.T) {
 	}
 	t.Run("Default configs should load correctly", func(t *testing.T) {
 		a := assert.New(t)
+		a.Equal(auth.DefaultAuth, cfg.Auth)
 		a.Equal(false, cfg.Clobber)
 		a.Equal(false, cfg.DryRun)
 		a.Equal(uint8(4), cfg.MaxConcurrency)
@@ -31,6 +33,7 @@ func TestConfig(t *testing.T) {
 	}
 	t.Run("Configs from .groomba.yaml should override defaults", func(t *testing.T) {
 		a := assert.New(t)
+		a.Equal(auth.SSHAgentAuth, cfg.Auth)
 		a.Equal(true, cfg.Clobber)
 		a.Equal(true, cfg.DryRun)
 		a.Equal(uint8(10), cfg.MaxConcurrency)
@@ -39,6 +42,7 @@ func TestConfig(t *testing.T) {
 		a.Equal([]string{"main", "teststatic"}, cfg.StaticBranches)
 	})
 
+	os.Setenv("GROOMBA_AUTH", "env-auth")
 	os.Setenv("GROOMBA_CLOBBER", "false")
 	os.Setenv("GROOMBA_DRY_RUN", "false")
 	os.Setenv("GROOMBA_MAX_CONCURRENCY", "2")
@@ -52,6 +56,7 @@ func TestConfig(t *testing.T) {
 	}
 	t.Run("Configs from Environment should override .groomba.yaml and defaults", func(t *testing.T) {
 		a := assert.New(t)
+		a.Equal("env-auth", string(cfg.Auth))
 		a.Equal(false, cfg.Clobber)
 		a.Equal(false, cfg.DryRun)
 		a.Equal(uint8(2), cfg.MaxConcurrency)

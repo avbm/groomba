@@ -1,4 +1,5 @@
 ---
+auth: ssh-agent
 clobber: true
 dry_run: true
 max_concurrency: 10
