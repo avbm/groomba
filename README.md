@@ -14,9 +14,9 @@ Download and run latest version:
 curl -sL https://git.io/groomba | bash
 ```
 
-Download and run specific version, ex v0.2.10:
+Download and run specific version, ex v0.3.17:
 ```
-curl -sL https://git.io/groomba | VERSION=v0.3.19 bash
+curl -sL https://git.io/groomba | VERSION=v0.3.17 bash
 ```
 
 You can add the snippet above as a step in your CI pipeline on your main branch to periodically groom your repository.
