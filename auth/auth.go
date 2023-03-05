@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
@@ -28,7 +27,7 @@ func NewAuth(authType AuthType) (*Auth, error) {
 	case DefaultAuth:
 		a.auth = nil
 	default:
-		err = errors.New(fmt.Sprintf("auth type %s not supported. valid values: %s, %s", authType, SSHAgentAuth, DefaultAuth))
+		err = fmt.Errorf("auth type %s not supported. valid values: %s, %s", authType, SSHAgentAuth, DefaultAuth)
 	}
 	return a, err
 }
