@@ -20,23 +20,26 @@ import (
 	"fmt"
 
 	"github.com/apex/log"
+	"github.com/avbm/groomba/auth"
 	"github.com/spf13/viper"
 )
 
 // Config stores the configuration for Groomba
 type Config struct {
-	Clobber           bool     `yaml:"clobber" toml:"clobber"`
-	DryRun            bool     `yaml:"dry_run" toml:"dry_run"`
-	MaxConcurrency    uint8    `yaml:"max_concurrency" toml:"max_concurrency"`
-	Prefix            string   `yaml:"prefix" toml:"prefix"`
-	StaleAgeThreshold int      `yaml:"stale_age_threshold" toml:"stale_age_threshold"`
-	StaticBranches    []string `yaml:"static_branches" toml:"static_branches"`
+	Auth              auth.AuthType `yaml:"auth" toml:"auth"`
+	Clobber           bool          `yaml:"clobber" toml:"clobber"`
+	DryRun            bool          `yaml:"dry_run" toml:"dry_run"`
+	MaxConcurrency    uint8         `yaml:"max_concurrency" toml:"max_concurrency"`
+	Prefix            string        `yaml:"prefix" toml:"prefix"`
+	StaleAgeThreshold int           `yaml:"stale_age_threshold" toml:"stale_age_threshold"`
+	StaticBranches    []string      `yaml:"static_branches" toml:"static_branches"`
 }
 
 func GetConfig(configPath string) (*Config, error) {
 	viper.SetConfigName(".groomba")
 	viper.AddConfigPath(configPath) // should be "." except for tests
 
+	viper.SetDefault("auth", auth.DefaultAuth)
 	viper.RegisterAlias("DryRun", "dry_run")
 	viper.SetDefault("stale_age_threshold", 14)
 	viper.RegisterAlias("StaleAgeThreshold", "stale_age_threshold")
@@ -63,6 +66,9 @@ func GetConfig(configPath string) (*Config, error) {
 	}
 	if err := viper.BindEnv("static_branches", "GROOMBA_STATIC_BRANCHES"); err != nil {
 		return nil, fmt.Errorf("getConfig: failed to bind env static_branches: %s", err)
+	}
+	if err := viper.BindEnv("auth", "GROOMBA_AUTH"); err != nil {
+		return nil, fmt.Errorf("getConfig: failed to bind env auth: %s", err)
 	}
 
 	err := viper.ReadInConfig()

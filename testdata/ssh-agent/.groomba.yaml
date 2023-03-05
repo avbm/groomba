@@ -1,0 +1,8 @@
+---
+auth: ssh-agent
+clobber: true
+dry_run: true
+max_concurrency: 10
+prefix: zzz_
+stale_age_threshold: 10
+static_branches: ["main", "teststatic"]

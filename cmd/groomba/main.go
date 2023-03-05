@@ -25,6 +25,7 @@ import (
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
 	"github.com/avbm/groomba"
+	"github.com/avbm/groomba/auth"
 )
 
 func main() {
@@ -33,13 +34,18 @@ func main() {
 	groomba.CheckIfError(err)
 
 	repo, _ := git.PlainOpen(".")
+
+	a, err := auth.NewAuth(cfg.Auth)
+	groomba.CheckIfError(err)
+
 	repo.Fetch(&git.FetchOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
 		Depth:      1,
+		Auth:       a.Get(),
 	})
 
-	g := groomba.NewGroomba(cfg, repo)
+	g := groomba.NewGroomba(cfg, repo, a)
 
 	fb, err := g.FilterBranches(time.Now())
 	groomba.CheckIfError(err)

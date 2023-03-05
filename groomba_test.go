@@ -11,12 +11,21 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/stretchr/testify/assert"
 )
 
 func CheckTestInitError(err error, msg ...string) {
 	msg = append([]string{"Failed to initialize test"}, msg...)
 	CheckIfError(err, msg...)
+}
+
+type MockAuthenticator struct {
+	auth transport.AuthMethod
+}
+
+func (ma *MockAuthenticator) Get() transport.AuthMethod {
+	return ma.auth
 }
 
 func InitTest() {
@@ -72,7 +81,7 @@ func ExampleGroomba_PrintBranchesGroupbyAuthor() {
 
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
-	g := Groomba{cfg: cfg, repo: repo}
+	g := Groomba{cfg: cfg, repo: repo, auth: &MockAuthenticator{}}
 
 	fb, _ := g.FilterBranches(time.Now())
 	g.PrintBranchesGroupbyAuthor(fb)
@@ -90,7 +99,7 @@ func TestGroomba(t *testing.T) {
 	os.Setenv("GROOMBA_PREFIX", "stale/")
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
-	g := Groomba{cfg: cfg, repo: repo}
+	g := Groomba{cfg: cfg, repo: repo, auth: &MockAuthenticator{}}
 	t.Run("main branch should be static", func(t *testing.T) {
 		a := assert.New(t)
 		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/main"))
@@ -160,7 +169,7 @@ func TestGroombaDryRun(t *testing.T) {
 	os.Setenv("GROOMBA_DRY_RUN", "true")
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
-	g := Groomba{cfg: cfg, repo: repo}
+	g := Groomba{cfg: cfg, repo: repo, auth: &MockAuthenticator{}}
 	t.Run("main branch should be static", func(t *testing.T) {
 		a := assert.New(t)
 		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/main"))
@@ -231,7 +240,7 @@ func TestGroombaPrefix(t *testing.T) {
 	os.Setenv("GROOMBA_DRY_RUN", "false")
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
-	g := Groomba{cfg: cfg, repo: repo}
+	g := Groomba{cfg: cfg, repo: repo, auth: &MockAuthenticator{}}
 	t.Run("main branch should be static", func(t *testing.T) {
 		a := assert.New(t)
 		a.Equal(true, g.IsStaticBranch("refs/remotes/origin/main"))
@@ -354,7 +363,7 @@ func TestGroombaClobber(t *testing.T) {
 	os.Setenv("GROOMBA_CLOBBER", "false")
 	cfg, _ := GetConfig(".")
 	repo, _ := git.PlainOpen("testdata/dst")
-	g := Groomba{cfg: cfg, repo: repo}
+	g := Groomba{cfg: cfg, repo: repo, auth: &MockAuthenticator{}}
 
 	today := time.Now()
 	fb, _ := g.FilterBranches(today)
@@ -391,7 +400,7 @@ func TestGroombaClobber(t *testing.T) {
 
 	os.Setenv("GROOMBA_CLOBBER", "true")
 	cfgC, _ := GetConfig(".")
-	gc := Groomba{cfg: cfgC, repo: repo}
+	gc := Groomba{cfg: cfgC, repo: repo, auth: &MockAuthenticator{}}
 	t.Run("MoveBranch should succeed when clobber enabled", func(t *testing.T) {
 		a := assert.New(t)
 		err := gc.MoveBranch("IsStale")

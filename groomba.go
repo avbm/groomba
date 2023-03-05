@@ -26,6 +26,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 
 	"gopkg.in/yaml.v3"
 )
@@ -34,6 +35,7 @@ import (
 type Groomba struct {
 	cfg  *Config
 	repo *git.Repository
+	auth Authenticator
 }
 
 // CheckIfError should be used to naively panic if an error is not nil.
@@ -45,10 +47,15 @@ func CheckIfError(err error, prefix ...string) {
 	log.Fatalf("%s %s", prefix, err)
 }
 
-func NewGroomba(config *Config, repo *git.Repository) Groomba {
+type Authenticator interface {
+	Get() transport.AuthMethod
+}
+
+func NewGroomba(config *Config, repo *git.Repository, a Authenticator) Groomba {
 	return Groomba{
 		cfg:  config,
 		repo: repo,
+		auth: a,
 	}
 }
 
@@ -138,6 +145,7 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{renameSpec},
 		Force:      g.cfg.Clobber,
+		Auth:       g.auth.Get(),
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		log.Infof("  Failed to copy %s to %s with error: %s", refName, newRefName, err)
@@ -149,6 +157,7 @@ func (g Groomba) MoveBranch(refName string) *MoveBranchError {
 	err = g.repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		RefSpecs:   []config.RefSpec{deleteSpec},
+		Auth:       g.auth.Get(),
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		log.Infof("  Failed to delete %s", refName, err)
