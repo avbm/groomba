@@ -52,7 +52,7 @@ To configure Groomba, you can set each configuration option in a `.groomba.toml`
 
 ### Auth
 
-`Auth` is a string that tells Groomba which authentication mechanism to use. Currently only 2 mechanisms are supported, `default` which uses the default credentials which were used to clone the repository and `ssh-agent` to use the keys available in a local [ssh-agent](https://www.ssh.com/academy/ssh/agent) session.
+`Auth` is a string that tells Groomba which authentication mechanism to use. Currently only 2 mechanisms are supported, `default` which uses the default credentials which were used to clone the repository and `ssh-agent` to use the keys available in a local [ssh-agent](https://linux.die.net/man/1/ssh-agent) session.
 
 Default: `default`
 
