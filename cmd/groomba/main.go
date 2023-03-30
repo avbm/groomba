@@ -19,7 +19,7 @@ package main
 import (
 	"time"
 
-	"github.com/go-git/go-git/v5"
+	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 
 	"github.com/apex/log"
@@ -46,7 +46,9 @@ func main() {
 		Depth:    1,
 		Auth:     a.Get(),
 	})
-	groomba.CheckIfError(err, "failed to fetch references from upstream")
+	if err != git.NoErrAlreadyUpToDate {
+		groomba.CheckIfError(err, "failed to fetch references from upstream")
+	}
 
 	g := groomba.NewGroomba(cfg, repo, a)
 
