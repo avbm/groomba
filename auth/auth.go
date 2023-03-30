@@ -23,7 +23,7 @@ func NewAuth(authType AuthType) (*Auth, error) {
 	a := &Auth{}
 	switch authType {
 	case SSHAgentAuth:
-		a.auth, err = ssh.NewSSHAgentAuth("") // get username from environment
+		a.auth, err = ssh.DefaultAuthBuilder("git")
 	case DefaultAuth:
 		a.auth = nil
 	default:

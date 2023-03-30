@@ -33,16 +33,18 @@ func main() {
 	cfg, err := groomba.GetConfig(".")
 	groomba.CheckIfError(err, "failed to get configs")
 
-	repo, _ := git.PlainOpen(".")
+	repo, err := git.PlainOpen(".")
+	groomba.CheckIfError(err, "failed to open repository")
 
 	a, err := auth.NewAuth(cfg.Auth)
 	groomba.CheckIfError(err, "failed to initialize auth")
 
 	err = repo.Fetch(&git.FetchOptions{
 		RemoteName: "origin",
-		RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
-		Depth:      1,
-		Auth:       a.Get(),
+		//RefSpecs:   []config.RefSpec{"refs/remotes/origin"},
+		RefSpecs: []config.RefSpec{"+refs/heads/*:refs/remotes/origin/*"},
+		Depth:    1,
+		Auth:     a.Get(),
 	})
 	groomba.CheckIfError(err, "failed to fetch references from upstream")
 
