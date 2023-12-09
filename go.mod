@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/apex/log v1.9.0
-	github.com/go-git/go-git/v5 v5.10.1
+	github.com/go-git/go-git/v5 v5.11.0
 	github.com/spf13/viper v1.18.1
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v3 v3.0.1
