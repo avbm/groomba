@@ -2,7 +2,7 @@ module github.com/avbm/groomba
 
 go 1.21
 
-toolchain go1.23.4
+toolchain go1.23.5
 
 require (
 	github.com/apex/log v1.9.0
