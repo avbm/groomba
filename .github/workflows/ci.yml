@@ -22,7 +22,7 @@ jobs:
         fetch-depth: 0
 
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v9
 
     - name: Format
       run: go fmt ./...
